@@ -1,4 +1,5 @@
 import MacedoniaMap from "./components/MacedoniaMap";
+import FloatingNavbar from "./components/FloatingNavbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,47 +12,34 @@ export default function Home() {
   const progressPercent = (visitedCount / totalRegions) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-          <h1 className="text-2xl font-bold tracking-tight">🗺️ Scratch Map</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              Share Map
-            </Button>
-            <Button size="sm">Save Progress</Button>
-          </div>
-        </div>
-      </header>
+    <>
+      <FloatingNavbar />
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6 pt-24">
         {/* Stats Row */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-3xl font-bold">Macedonia</h2>
-            <p className="text-muted-foreground">
-              Click on a region to mark it as visited
-            </p>
-          </div>
-
-          <Card className="sm:min-w-[280px]">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-base">
-                Your Progress
-                <Badge variant="secondary">
-                  {visitedCount} / {totalRegions}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              <Progress value={progressPercent} className="h-2" />
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                {progressPercent.toFixed(1)}% explored
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="w-full">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <article>
+                <h1 className="text-3xl font-bold">Macedonia</h1>
+                <p className="text-sm font-normal text-muted-foreground">
+                  Click on a region to mark it as visited
+                </p>
+              </article>
+              <aside className="flex items-center gap-4">
+                <figure className="flex flex-col items-end">
+                  <Badge variant="secondary" className="mb-1">
+                    {visitedCount} / {totalRegions} regions
+                  </Badge>
+                  <Progress value={progressPercent} className="h-2 w-32" />
+                  <figcaption className="mt-1 text-xs text-muted-foreground">
+                    {progressPercent.toFixed(1)}% explored
+                  </figcaption>
+                </figure>
+              </aside>
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
         {/* Map */}
         <Card className="w-full overflow-hidden">
@@ -61,12 +49,18 @@ export default function Home() {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4">
-          <Button variant="destructive" size="sm">
-            Reset All
-          </Button>
-        </div>
-      </main>
-    </div>
+        <Card className="w-full">
+          <CardContent className="flex justify-center gap-4 p-4">
+            <Button variant="outline" size="sm">
+              Share Map
+            </Button>
+            <Button size="sm">Save Progress</Button>
+            <Button variant="destructive" size="sm">
+              Reset All
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+    </>
   );
 }

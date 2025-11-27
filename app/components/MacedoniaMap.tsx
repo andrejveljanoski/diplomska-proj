@@ -1,22 +1,17 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5map from "@amcharts/amcharts5/map";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5geodata_mkHigh from "@amcharts/amcharts5-geodata/northMacedoniaHigh";
 
-// Use useLayoutEffect on client, useEffect on server (avoids hydration warning)
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
 export default function MacedoniaMap() {
   const chartRef = useRef<am5.Root | null>(null);
   const chartDivRef = useRef<HTMLDivElement>(null);
 
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     if (!chartDivRef.current) return;
-
     // Dispose of existing chart if any
     if (chartRef.current) {
       chartRef.current.dispose();
@@ -32,9 +27,12 @@ export default function MacedoniaMap() {
     // Create the map chart
     const chart = root.container.children.push(
       am5map.MapChart.new(root, {
-        panX: "rotateX",
-        panY: "rotateY",
+        panX: "translateX",
+        panY: "translateY",
         projection: am5map.geoMercator(),
+        maxZoomLevel: 1,
+        minZoomLevel: 1,
+        maxPanOut: 0, // Prevents panning outside the map bounds
       })
     );
 
@@ -60,25 +58,36 @@ export default function MacedoniaMap() {
       fill: am5.color(0xd4af37), // Gold color on hover
     });
 
+    // Track visited state
+    const visitedRegions = new Set<string>();
+
     // Click event for "scratching" regions
     polygonSeries.mapPolygons.template.events.on("click", function (ev) {
       const dataItem = ev.target.dataItem;
       if (dataItem) {
         const polygon = ev.target;
-        // Toggle visited state
-        const currentFill = polygon.get("fill");
-        if (currentFill?.toString() === am5.color(0x4caf50).toString()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const regionId = (dataItem as any).get("id") as string;
+
+        if (visitedRegions.has(regionId)) {
           // Unmark as visited
+          visitedRegions.delete(regionId);
           polygon.set("fill", am5.color(0x8ab7ff));
+          polygon.setAll({ fillPattern: undefined });
         } else {
-          // Mark as visited (green)
-          polygon.set("fill", am5.color(0x4caf50));
+          // Mark as visited (image pattern)
+          visitedRegions.add(regionId);
+          polygon.setAll({
+            fillPattern: am5.PicturePattern.new(root, {
+              src: "/images/mkd.png",
+              width: 100,
+              height: 100,
+              centered: true,
+            }),
+          });
         }
       }
     });
-
-    // Add zoom control
-    chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
 
     // Cleanup on unmount
     return () => {
