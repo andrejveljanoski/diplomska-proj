@@ -68,46 +68,88 @@
 
 ### 3.1 Application Concept
 
-**Proposed App: Scratch Map / Visited Places Tracker**
+**Proposed App: Scratch Map / Visited Places Tracker (Macedonia)**
 
-A web application where users can track and visualize countries/regions they have visited, similar to a physical scratch map.
+A web application where users can track and visualize regions in Macedonia they have visited, similar to a physical scratch map.
 
-- Interactive world map with clickable regions
+- Interactive Macedonia map with clickable municipalities (80 regions)
 - User profiles with personal travel statistics
 - Public/private map sharing
 - Travel goals and bucket list features
-- Social features (compare maps with friends)
+- Visit history with timestamps, notes, ratings
 
 ### 3.2 Technical Stack
 
-- **Framework:** Next.js 14+ (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Map Library:** amCharts 5 Maps (@amcharts/amcharts5, @amcharts/amcharts5-geodata)
-- **Map Data:** amCharts GeoJSON (bundled country/regional maps)
-- **Database:** PostgreSQL / Supabase
-- **Authentication:** NextAuth.js / Clerk
-- **ORM:** Prisma / Drizzle
+| Component          | Technology               | Reason                                        |
+| ------------------ | ------------------------ | --------------------------------------------- |
+| **Framework**      | Next.js 14+ (App Router) | SSR, SSG, Server Components                   |
+| **Language**       | TypeScript               | Type safety                                   |
+| **Styling**        | Tailwind CSS v4          | Utility-first, fast                           |
+| **UI Components**  | shadcn/ui                | Pre-built, customizable                       |
+| **Map Library**    | amCharts 5               | Interactive SVG maps, North Macedonia geodata |
+| **Database**       | Neon (PostgreSQL)        | Serverless, works on all platforms            |
+| **ORM**            | Drizzle ORM              | Type-safe, lightweight, SQL-like              |
+| **Authentication** | Auth.js (NextAuth v5)    | Platform-agnostic, JWT sessions               |
+| **Animations**     | Framer Motion            | Smooth UI transitions                         |
 
-### 3.3 Application Features
+### 3.3 Database Schema
 
-1. **Homepage/Landing** - Static generation with ISR, marketing content
-2. **Interactive Map View** - Client-side rendering for map interactions
-3. **User Dashboard** - Server components with data fetching, travel statistics
-4. **Country Details** - Dynamic routes (`/country/[code]`), SSR with ISR
-5. **User Profiles** - Public shareable maps, SSR
-6. **Authentication** - OAuth providers (Google, GitHub)
-7. **API Routes** - CRUD operations for visited places
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     users       │     │   userVisits    │     │    regions      │
+├─────────────────┤     ├─────────────────┤     ├─────────────────┤
+│ id (PK)         │────<│ userId (FK)     │     │ id (PK)         │
+│ email           │     │ regionId (FK)   │>────│ code (MK-SK)    │
+│ password        │     │ visitedAt       │     │ name            │
+│ name            │     │ notes           │     │ population      │
+│ createdAt       │     │ rating          │     │ area            │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+**Key Relationships:**
+
+- User HAS MANY visits
+- Region HAS MANY visits
+- Visit BELONGS TO User and Region
+
+**Example Queries:**
+
+- Get user's visited regions (JOIN userVisits + regions)
+- Calculate user progress (visited / total regions)
+- Leaderboard (GROUP BY userId, COUNT visits)
+- Region statistics (most visited, least visited)
+
+### 3.4 Application Features
+
+1. **Homepage/Landing** - Interactive Macedonia map, marketing content
+2. **Interactive Map View** - Click to mark regions as visited (amCharts 5)
+3. **User Dashboard** - Travel statistics, progress bar, recent visits
+4. **Region Details** - Dynamic routes (`/region/[code]`), SSR
+5. **User Profiles** - Public shareable maps
+6. **Authentication** - Email/password + OAuth (Google, GitHub)
+7. **API Routes / Server Actions** - CRUD for visits
 8. **Admin Panel** - User management, analytics
 
-### 3.4 Development Milestones
+### 3.5 Why SQL over NoSQL
 
-- [ ] Project setup and configuration
-- [ ] Database schema design
-- [ ] Authentication implementation
-- [ ] Core pages development
-- [ ] API routes and server actions
-- [ ] Admin dashboard
+| Requirement                | SQL (PostgreSQL) | NoSQL (MongoDB) |
+| -------------------------- | ---------------- | --------------- |
+| User → Visits → Regions    | ✅ JOINs         | ⚠️ Denormalized |
+| "Users who visited Skopje" | ✅ Simple JOIN   | ⚠️ Aggregation  |
+| Statistics (COUNT, AVG)    | ✅ Built-in      | ⚠️ Complex      |
+| Data integrity             | ✅ Foreign keys  | ❌ None         |
+
+### 3.6 Development Milestones
+
+- [x] Project setup and configuration
+- [x] UI components (shadcn/ui)
+- [x] Interactive map (amCharts 5)
+- [x] Floating navbar
+- [x] Login/Signup page UI
+- [ ] Database schema (Drizzle + Neon)
+- [ ] Authentication (Auth.js)
+- [ ] Server Actions for visits
+- [ ] User dashboard
 - [ ] Testing and optimization
 
 ---
@@ -257,6 +299,9 @@ A web application where users can track and visualize countries/regions they hav
 - [Vercel Documentation](https://vercel.com/docs)
 - [AWS Documentation](https://docs.aws.amazon.com/)
 - [Docker Documentation](https://docs.docker.com/)
+- [Drizzle ORM Documentation](https://orm.drizzle.team/)
+- [Auth.js Documentation](https://authjs.dev/)
+- [Neon Documentation](https://neon.tech/docs)
 
 ### Tools
 
@@ -264,6 +309,7 @@ A web application where users can track and visualize countries/regions they hav
 - Git/GitHub
 - Postman/Insomnia
 - Lighthouse CI
+- Drizzle Studio
 
 ### Academic Resources
 
@@ -279,7 +325,8 @@ A web application where users can track and visualize countries/regions they hav
 - Include environment variables management comparison
 - Document database connection handling differences
 - Consider multi-region deployment testing
+- Same Neon database connection works across all deployment platforms (fair comparison)
 
 ---
 
-_Last Updated: November 25, 2025_
+_Last Updated: November 29, 2025_
