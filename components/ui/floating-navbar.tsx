@@ -17,31 +17,35 @@ interface NavItem {
 export const FloatingNav = ({
   navItems,
   className,
+  alwaysVisible = false,
 }: {
   navItems: NavItem[];
   className?: string;
+  alwaysVisible?: boolean;
 }) => {
-  const { scrollYProgress } = useScroll();
+  const { scrollY } = useScroll();
 
   // Start visible by default
   const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  useMotionValueEvent(scrollYProgress, "change", (current) => {
-    // Check if current is not undefined and is a number
-    if (typeof current === "number") {
-      const direction = current - scrollYProgress.getPrevious()!;
-
-      // Always show at top of page, or when scrolling up
-      if (scrollYProgress.get() < 0.05) {
+  useMotionValueEvent(scrollY, "change", (current) => {
+    if (alwaysVisible) {
+      setVisible(true);
+      return;
+    }
+    // Always show at top of page (within 100px)
+    if (current < 100) {
+      setVisible(true);
+    } else {
+      // Show when scrolling up, hide when scrolling down
+      if (current < lastScrollY) {
         setVisible(true);
       } else {
-        if (direction < 0) {
-          setVisible(true);
-        } else {
-          setVisible(false);
-        }
+        setVisible(false);
       }
     }
+    setLastScrollY(current);
   });
 
   return (
