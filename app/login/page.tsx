@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +26,8 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { login, register } from "@/lib/actions/auth";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -52,6 +55,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -73,16 +77,41 @@ export default function LoginPage() {
 
   async function onLogin(data: LoginFormValues) {
     setIsLoading(true);
-    console.log("Login:", data);
-    // TODO: Implement actual login logic
-    setTimeout(() => setIsLoading(false), 1000);
+
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
+    const result = await login(formData);
+
+    if (result?.error) {
+      toast.error(result.error);
+      setIsLoading(false);
+    }
+    // If successful, Auth.js will redirect automatically
   }
 
   async function onSignup(data: SignupFormValues) {
     setIsLoading(true);
-    console.log("Signup:", data);
-    // TODO: Implement actual signup logic
-    setTimeout(() => setIsLoading(false), 1000);
+
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
+    const result = await register(formData);
+
+    if (result?.error) {
+      toast.error(result.error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (result?.success) {
+      toast.success("Account created! Please sign in.");
+      signupForm.reset();
+      setIsLoading(false);
+    }
   }
 
   return (
