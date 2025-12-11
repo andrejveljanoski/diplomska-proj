@@ -6,9 +6,24 @@ import * as am5map from "@amcharts/amcharts5/map";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5geodata_mkHigh from "@amcharts/amcharts5-geodata/northMacedoniaHigh";
 
-export default function MacedoniaMap() {
+interface MacedoniaMapProps {
+  visitedRegions: Set<string>;
+  onRegionToggle: (regionId: string, isVisited: boolean) => void;
+}
+
+export default function MacedoniaMap({
+  visitedRegions,
+  onRegionToggle,
+}: MacedoniaMapProps) {
   const chartRef = useRef<am5.Root | null>(null);
   const chartDivRef = useRef<HTMLDivElement>(null);
+  // Store visited regions in a ref to access current value in event handlers
+  const visitedRegionsRef = useRef<Set<string>>(visitedRegions);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    visitedRegionsRef.current = visitedRegions;
+  }, [visitedRegions]);
 
   useEffect(() => {
     if (!chartDivRef.current) return;
@@ -58,35 +73,57 @@ export default function MacedoniaMap() {
       fill: am5.color(0xd4af37), // Gold color on hover
     });
 
-    // Track visited state
-    const visitedRegions = new Set<string>();
-
-    // Click event for "scratching" regions
+    // Click event for "scratching" regions - update polygon directly
     polygonSeries.mapPolygons.template.events.on("click", function (ev) {
       const dataItem = ev.target.dataItem;
       if (dataItem) {
         const polygon = ev.target;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const regionId = (dataItem as any).get("id") as string;
+        const isCurrentlyVisited = visitedRegionsRef.current.has(regionId);
 
-        if (visitedRegions.has(regionId)) {
-          // Unmark as visited
-          visitedRegions.delete(regionId);
+        if (isCurrentlyVisited) {
+          // Unmark as visited - update polygon directly
           polygon.set("fill", am5.color(0x8ab7ff));
-          polygon.setAll({ fillPattern: undefined });
+          polygon.set("fillPattern", undefined);
         } else {
-          // Mark as visited (image pattern)
-          visitedRegions.add(regionId);
-          polygon.setAll({
-            fillPattern: am5.PicturePattern.new(root, {
+          // Mark as visited - update polygon directly with pattern
+          polygon.set(
+            "fillPattern",
+            am5.PicturePattern.new(root, {
               src: "/images/mkd.png",
               width: 100,
               height: 100,
               centered: true,
-            }),
-          });
+            })
+          );
         }
+
+        // Notify parent of state change
+        onRegionToggle(regionId, !isCurrentlyVisited);
       }
+    });
+
+    // Initial render of visited state after series is ready
+    polygonSeries.events.once("datavalidated", () => {
+      polygonSeries.mapPolygons.each((polygon) => {
+        const dataItem = polygon.dataItem;
+        if (dataItem) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const regionId = (dataItem as any).get("id") as string;
+          if (visitedRegionsRef.current.has(regionId)) {
+            polygon.set(
+              "fillPattern",
+              am5.PicturePattern.new(root, {
+                src: "/images/mkd.png",
+                width: 100,
+                height: 100,
+                centered: true,
+              })
+            );
+          }
+        }
+      });
     });
 
     // Cleanup on unmount
@@ -96,6 +133,7 @@ export default function MacedoniaMap() {
         chartRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

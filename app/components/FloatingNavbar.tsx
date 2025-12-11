@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { FloatingNav } from "@/components/ui/floating-navbar";
 
-const FloatingNavbar = () => {
+export default function FloatingNavbar() {
+  const { data: session } = useSession();
+
   const navItems = useMemo(
     () => [
       {
@@ -15,7 +18,11 @@ const FloatingNavbar = () => {
     []
   );
 
-  return <FloatingNav navItems={navItems} />;
-};
-
-export default FloatingNavbar;
+  return (
+    <FloatingNav
+      navItems={navItems}
+      session={session}
+      onSignOut={() => signOut({ callbackUrl: "/" })}
+    />
+  );
+}

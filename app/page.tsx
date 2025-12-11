@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useCallback, useMemo } from "react";
 import MacedoniaMap from "./components/MacedoniaMap";
 import FloatingNavbar from "./components/FloatingNavbar";
 import { Button } from "@/components/ui/button";
@@ -5,17 +8,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
+// Total regions in North Macedonia
+const TOTAL_REGIONS = 80;
+
 export default function Home() {
-  // TODO: This will come from state/database later
-  const visitedCount = 5;
-  const totalRegions = 80;
-  const progressPercent = (visitedCount / totalRegions) * 100;
+  const [visitedRegions, setVisitedRegions] = useState<Set<string>>(
+    () => new Set()
+  );
+
+  // Memoize the visited regions set for stable reference
+  const memoizedVisitedRegions = useMemo(
+    () => visitedRegions,
+    [visitedRegions]
+  );
+
+  const visitedCount = memoizedVisitedRegions.size;
+  const progressPercent = (visitedCount / TOTAL_REGIONS) * 100;
+
+  // Handle region toggle from map click
+  const handleRegionToggle = useCallback(
+    (regionId: string, isVisited: boolean) => {
+      setVisitedRegions((prev) => {
+        const next = new Set(prev);
+        if (isVisited) {
+          next.add(regionId);
+        } else {
+          next.delete(regionId);
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  // TODO: Implement these
+  const handleShare = () => {
+    console.log("Share map - to be implemented");
+  };
+
+  const handleSave = () => {
+    console.log("Save progress - to be implemented");
+  };
 
   return (
     <>
       <FloatingNavbar />
 
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6 pt-24">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6 pt-32">
         {/* Stats Row */}
         <Card className="w-full">
           <CardHeader className="pb-2">
@@ -29,7 +68,7 @@ export default function Home() {
               <aside className="flex items-center gap-4">
                 <figure className="flex flex-col items-end">
                   <Badge variant="secondary" className="mb-1">
-                    {visitedCount} / {totalRegions} regions
+                    {visitedCount} / {TOTAL_REGIONS} regions
                   </Badge>
                   <Progress value={progressPercent} className="h-2 w-32" />
                   <figcaption className="mt-1 text-xs text-muted-foreground">
@@ -44,19 +83,21 @@ export default function Home() {
         {/* Map */}
         <Card className="w-full overflow-hidden">
           <CardContent className="p-0">
-            <MacedoniaMap />
+            <MacedoniaMap
+              visitedRegions={memoizedVisitedRegions}
+              onRegionToggle={handleRegionToggle}
+            />
           </CardContent>
         </Card>
 
         {/* Action Buttons */}
         <Card className="w-full">
           <CardContent className="flex justify-center gap-4 p-4">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleShare}>
               Share Map
             </Button>
-            <Button size="sm">Save Progress</Button>
-            <Button variant="destructive" size="sm">
-              Reset All
+            <Button size="sm" onClick={handleSave}>
+              Save Progress
             </Button>
           </CardContent>
         </Card>

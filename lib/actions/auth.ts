@@ -15,7 +15,7 @@ const registerSchema = z.object({
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name must be less than 50 characters")
     .trim(),
-  email: z.string().email("Invalid email address").toLowerCase().trim(),
+  email: z.email("Invalid email address").toLowerCase().trim(),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
@@ -23,7 +23,7 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address").toLowerCase().trim(),
+  email: z.email("Invalid email address").toLowerCase().trim(),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -45,12 +45,14 @@ export async function register(formData: FormData) {
   const { name, email, password } = validated.data;
 
   try {
-    // Check if user already exists
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
+    // Check if user already exists using select instead of query API
+    const existingUsers = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (existingUser) {
+    if (existingUsers.length > 0) {
       return { error: "An account with this email already exists" };
     }
 
@@ -67,6 +69,10 @@ export async function register(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error("Registration error:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return { error: "Something went wrong. Please try again." };
   }
 }
