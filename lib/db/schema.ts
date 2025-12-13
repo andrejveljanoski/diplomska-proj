@@ -40,6 +40,7 @@ export const regions = pgTable("regions", {
   name: varchar("name", { length: 100 }).notNull(),
   population: integer("population"),
   description: varchar("description", { length: 1000 }),
+  image: varchar("image", { length: 500 }),
   placesToVisit: varchar("places_to_visit", { length: 500 }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
