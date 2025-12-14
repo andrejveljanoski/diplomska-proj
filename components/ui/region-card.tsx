@@ -6,13 +6,7 @@ import { HeartIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardDescription,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -31,12 +25,19 @@ const RegionCard = ({ region, className }: RegionCardProps) => {
   const [liked, setLiked] = useState<boolean>(false);
 
   return (
-    <div className="relative max-w-md rounded-xl bg-gradient-to-r from-neutral-600 to-violet-300 pt-0 shadow-lg">
-      <div className="flex h-60 items-center justify-center">
+    <div
+      className={cn(
+        "relative max-w-md rounded-xl bg-linear-to-r from-neutral-600 to-violet-300 pt-0 shadow-lg ",
+        className
+      )}
+    >
+      <div className="relative h-60 w-full overflow-hidden rounded-xl">
         <Image
-          src={region.image ?? "/images/placeholder-image.png"}
+          src={"/images/mkd.png"} //temporary until img per region is uploaded
           alt={region.name}
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, 448px"
+          className="object-cover"
         />
       </div>
       <Button
@@ -54,17 +55,15 @@ const RegionCard = ({ region, className }: RegionCardProps) => {
       <Card className="border-none">
         <CardHeader>
           <CardTitle>{region.name}</CardTitle>
-          <CardDescription className="flex items-center gap-2">
-            {region.placesToVisit && (
-              <CardDescription className="flex flex-wrap items-center gap-2">
-                {region.placesToVisit.split(",").map((place, idx) => (
-                  <Badge key={idx} variant="outline" className="rounded-sm">
-                    {place.trim()}
-                  </Badge>
-                ))}
-              </CardDescription>
-            )}
-          </CardDescription>
+          {region.placesToVisit && (
+            <div className="flex flex-wrap items-center gap-2">
+              {region.placesToVisit.split(",").map((place, idx) => (
+                <Badge key={idx} variant="outline" className="rounded-sm">
+                  {place.trim()}
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardHeader>
         {region.description && (
           <CardContent>

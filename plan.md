@@ -95,26 +95,33 @@ A web application where users can track and visualize regions in Macedonia they 
 ### 3.3 Database Schema
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│     users       │     │   userVisits    │     │    regions      │
-├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ id (PK)         │────<│ userId (FK)     │     │ id (PK)         │
-│ email           │     │ regionId (FK)   │>────│ code (MK-SK)    │
-│ password        │     │ visitedAt       │     │ name            │
-│ name            │     │ notes           │     │ population      │
-│ createdAt       │     │ rating          │     │ area            │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+┌─────────────────┐     ┌────────────────────┐     ┌─────────────────┐
+│     users       │     │    userVisits      │     │    regions      │
+├─────────────────┤     ├────────────────────┤     ├─────────────────┤
+│ id (PK)         │────<│ userId (FK)        │     │ id (PK)         │
+│ email           │     │ regionCode (FK)    │>────│ code (unique)   │
+│ password        │     │ visitedAt          │     │ name            │
+│ name            │     │ notes              │     │ population      │
+│ createdAt       │     │ rating             │     │ area            │
+└─────────────────┘     └────────────────────┘     └─────────────────┘
 ```
 
-**Key Relationships:**
+**Key Relationships (Updated):**
 
 - User HAS MANY visits
 - Region HAS MANY visits
-- Visit BELONGS TO User and Region
+- Visit BELONGS TO User and Region (by regionCode)
 
-**Example Queries:**
+**Schema/Backend Improvements:**
 
-- Get user's visited regions (JOIN userVisits + regions)
+- `regions` table now has a unique `code` field (e.g. `skopje`, `bitola`), used as a stable identifier and foreign key
+- `userVisits` references `regionCode` (not numeric id)
+- All API and map logic now uses region codes directly (no mapping needed)
+- Database and API are simpler, more robust, and easier to maintain
+
+**Example Queries (Unchanged):**
+
+- Get user's visited regions (JOIN userVisits + regions ON regionCode)
 - Calculate user progress (visited / total regions)
 - Leaderboard (GROUP BY userId, COUNT visits)
 - Region statistics (most visited, least visited)

@@ -37,6 +37,7 @@ export const sessions = pgTable("sessions", {
 
 export const regions = pgTable("regions", {
   id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).unique().notNull(), // Unique identifier matching geodata
   name: varchar("name", { length: 100 }).notNull(),
   population: integer("population"),
   description: varchar("description", { length: 1000 }),
@@ -52,9 +53,9 @@ export const userVisits = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    regionId: integer("region_id")
+    regionCode: varchar("region_code", { length: 50 })
       .notNull()
-      .references(() => regions.id, { onDelete: "cascade" }),
+      .references(() => regions.code, { onDelete: "cascade" }),
     visitedAt: timestamp("visited_at", { mode: "date" }).defaultNow().notNull(),
     notes: varchar("notes", { length: 500 }),
     rating: integer("rating"), // 1-5 stars
@@ -62,7 +63,7 @@ export const userVisits = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
   },
-  (table) => [unique().on(table.userId, table.regionId)]
+  (table) => [unique().on(table.userId, table.regionCode)]
 );
 
 // ============================================

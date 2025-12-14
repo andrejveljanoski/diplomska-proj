@@ -9,9 +9,10 @@ import RegionCard from "@/components/ui/region-card";
 
 interface MacedoniaMapProps {
   visitedRegions: Set<string>;
-  onRegionToggle: (regionId: string, isVisited: boolean) => void;
+  onRegionToggle: (regionCode: string, isVisited: boolean) => void;
   regions?: Array<{
     id: number;
+    code: string;
     name: string;
     image?: string | null;
     description?: string | null;
@@ -90,32 +91,61 @@ export default function MacedoniaMap({
       fill: am5.color(0xd4af37), // Gold color on hover
     });
 
+    // Helper to extract region name from amCharts dataContext
+    const extractRegionName = (
+      dataItem: am5map.IMapPolygonSeriesDataItem
+    ): string | null => {
+      const context = (dataItem as { dataContext?: Record<string, unknown> })
+        .dataContext;
+      if (!context || typeof context !== "object") return null;
+
+      // Check known property paths in geodata
+      if (typeof context.name === "string") return context.name;
+
+      const properties = context.properties as
+        | Record<string, unknown>
+        | undefined;
+      if (properties && typeof properties.name === "string")
+        return properties.name;
+
+      if (typeof context.id === "string") return context.id;
+
+      return null;
+    };
+
     // Hover event for showing region card
     polygonSeries.mapPolygons.template.events.on("pointerover", function (ev) {
-      const dataItem = ev.target.dataItem;
-      if (dataItem) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const regionName = (dataItem as any).get("name") as string;
+      const dataItem = ev.target.dataItem as
+        | am5map.IMapPolygonSeriesDataItem
+        | undefined;
 
-        // Find matching region data
-        const regionData = regions.find(
-          (r) => r.name.toLowerCase() === regionName.toLowerCase()
-        );
-
-        if (regionData && chartDivRef.current) {
-          const rect = chartDivRef.current.getBoundingClientRect();
-          const point = ev.point;
-
-          setHoveredRegion({
-            name: regionData.name,
-            image: regionData.image,
-            description: regionData.description,
-            placesToVisit: regionData.placesToVisit,
-            x: point.x,
-            y: point.y,
-          });
-        }
+      if (!dataItem) {
+        setHoveredRegion(null);
+        return;
       }
+
+      const regionName = extractRegionName(dataItem);
+      if (!regionName) {
+        setHoveredRegion(null);
+        return;
+      }
+
+      const normalized = regionName.trim().toLowerCase();
+      // Match by name (normalized region name from geodata)
+      const regionData = regions.find(
+        (r) => r.name.toLowerCase() === normalized
+      );
+
+      const point = ev.point ?? { x: 0, y: 0 };
+
+      setHoveredRegion({
+        name: regionData?.name ?? regionName,
+        image: regionData?.image ?? null,
+        description: regionData?.description ?? null,
+        placesToVisit: regionData?.placesToVisit ?? null,
+        x: point.x,
+        y: point.y,
+      });
     });
 
     // Hide card when mouse leaves
@@ -125,19 +155,64 @@ export default function MacedoniaMap({
 
     // Click event for "scratching" regions - update polygon directly
     polygonSeries.mapPolygons.template.events.on("click", function (ev) {
-      const dataItem = ev.target.dataItem;
-      if (dataItem) {
-        const polygon = ev.target;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const regionId = (dataItem as any).get("id") as string;
-        const isCurrentlyVisited = visitedRegionsRef.current.has(regionId);
+      const dataItem = ev.target.dataItem as
+        | am5map.IMapPolygonSeriesDataItem
+        | undefined;
+      if (!dataItem) return;
 
-        if (isCurrentlyVisited) {
-          // Unmark as visited - update polygon directly
-          polygon.set("fill", am5.color(0x8ab7ff));
-          polygon.set("fillPattern", undefined);
-        } else {
-          // Mark as visited - update polygon directly with pattern
+      const polygon = ev.target;
+
+      // Use the same extraction logic as hover
+      const regionName = extractRegionName(dataItem);
+      if (!regionName) return;
+
+      const normalized = regionName.trim().toLowerCase();
+      const region = regions.find((r) => r.name.toLowerCase() === normalized);
+
+      if (!region) {
+        console.warn(`Region not found in database: ${regionName}`);
+        return;
+      }
+
+      const regionCode = region.code;
+      const isCurrentlyVisited = visitedRegionsRef.current.has(regionCode);
+
+      if (isCurrentlyVisited) {
+        // Unmark as visited - update polygon directly
+        polygon.set("fill", am5.color(0x8ab7ff));
+        polygon.set("fillPattern", undefined);
+      } else {
+        // Mark as visited - update polygon directly with pattern
+        polygon.set(
+          "fillPattern",
+          am5.PicturePattern.new(root, {
+            src: "/images/mkd.png",
+            width: 100,
+            height: 100,
+            centered: true,
+          })
+        );
+      }
+
+      // Notify parent of state change
+      onRegionToggle(regionCode, !isCurrentlyVisited);
+    });
+
+    // Initial render of visited state after series is ready
+    polygonSeries.events.once("datavalidated", () => {
+      polygonSeries.mapPolygons.each((polygon) => {
+        const dataItem = polygon.dataItem as
+          | am5map.IMapPolygonSeriesDataItem
+          | undefined;
+        if (!dataItem) return;
+
+        const regionName = extractRegionName(dataItem);
+        if (!regionName) return;
+
+        const normalized = regionName.trim().toLowerCase();
+        const region = regions.find((r) => r.name.toLowerCase() === normalized);
+
+        if (region && visitedRegionsRef.current.has(region.code)) {
           polygon.set(
             "fillPattern",
             am5.PicturePattern.new(root, {
@@ -147,31 +222,6 @@ export default function MacedoniaMap({
               centered: true,
             })
           );
-        }
-
-        // Notify parent of state change
-        onRegionToggle(regionId, !isCurrentlyVisited);
-      }
-    });
-
-    // Initial render of visited state after series is ready
-    polygonSeries.events.once("datavalidated", () => {
-      polygonSeries.mapPolygons.each((polygon) => {
-        const dataItem = polygon.dataItem;
-        if (dataItem) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const regionId = (dataItem as any).get("id") as string;
-          if (visitedRegionsRef.current.has(regionId)) {
-            polygon.set(
-              "fillPattern",
-              am5.PicturePattern.new(root, {
-                src: "/images/mkd.png",
-                width: 100,
-                height: 100,
-                centered: true,
-              })
-            );
-          }
         }
       });
     });
@@ -199,7 +249,7 @@ export default function MacedoniaMap({
 
       {hoveredRegion && (
         <div
-          className="pointer-events-none absolute z-50"
+          className="pointer-events-none absolute z-9999"
           style={{
             left: hoveredRegion.x + 20,
             top: hoveredRegion.y - 100,

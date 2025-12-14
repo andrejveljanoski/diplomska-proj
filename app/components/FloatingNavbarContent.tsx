@@ -7,7 +7,6 @@ const navItems = [
   {
     name: "Home",
     link: "/",
-    icon: <span className="text-sm">🏠</span>,
   },
 ];
 

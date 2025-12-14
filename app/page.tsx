@@ -1,20 +1,73 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import MacedoniaMap from "./components/MacedoniaMap";
 import FloatingNavbar from "./components/FloatingNavbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import type { Region } from "@/lib/db/schema";
 
 // Total regions in North Macedonia
-const TOTAL_REGIONS = 80;
+const TOTAL_REGIONS = 71;
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const [visitedRegions, setVisitedRegions] = useState<Set<string>>(
     () => new Set()
   );
+
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [isLoadingVisits, setIsLoadingVisits] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchRegions = async () => {
+      try {
+        const response = await fetch("/api/regions");
+        if (!response.ok) throw new Error("Failed to fetch regions");
+        const data: Region[] = await response.json();
+        setRegions(data);
+      } catch (error) {
+        console.error("Error fetching regions:", error);
+        toast.error("Failed to load regions");
+      }
+    };
+
+    fetchRegions();
+  }, []);
+
+  // Load saved visited regions when user logs in
+  useEffect(() => {
+    const loadUserVisits = async () => {
+      if (status === "authenticated" && session?.user) {
+        setIsLoadingVisits(true);
+        try {
+          const response = await fetch("/api/user-visits");
+          if (response.ok) {
+            const visits = await response.json();
+            const visitedSet = new Set<string>(
+              visits.map((v: { regionCode: string }) => v.regionCode)
+            );
+            setVisitedRegions(visitedSet);
+            toast.success("Progress loaded successfully");
+          } else if (response.status === 401) {
+            toast.error("Please log in to save your progress");
+          }
+        } catch (error) {
+          console.error("Error loading user visits:", error);
+          toast.error("Failed to load saved progress");
+        } finally {
+          setIsLoadingVisits(false);
+        }
+      }
+    };
+
+    loadUserVisits();
+  }, [status, session]);
 
   // Memoize the visited regions set for stable reference
   const memoizedVisitedRegions = useMemo(
@@ -27,13 +80,13 @@ export default function Home() {
 
   // Handle region toggle from map click
   const handleRegionToggle = useCallback(
-    (regionId: string, isVisited: boolean) => {
+    (regionCode: string, isVisited: boolean) => {
       setVisitedRegions((prev) => {
         const next = new Set(prev);
         if (isVisited) {
-          next.add(regionId);
+          next.add(regionCode);
         } else {
-          next.delete(regionId);
+          next.delete(regionCode);
         }
         return next;
       });
@@ -41,13 +94,46 @@ export default function Home() {
     []
   );
 
-  // TODO: Implement these
+  // Share map
   const handleShare = () => {
-    console.log("Share map - to be implemented");
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
   };
 
-  const handleSave = () => {
-    console.log("Save progress - to be implemented");
+  // Save progress
+  const handleSave = async () => {
+    if (!session?.user) {
+      toast.error("Please log in to save your progress");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/user-visits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          visitedRegionCodes: Array.from(visitedRegions),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save progress");
+      }
+
+      const result = await response.json();
+      toast.success(
+        `Progress saved! (${result.added} added, ${result.removed} removed)`
+      );
+    } catch (error) {
+      console.error("Error saving progress:", error);
+      toast.error("Failed to save progress");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -81,12 +167,21 @@ export default function Home() {
         </Card>
 
         {/* Map */}
-        <Card className="w-full overflow-hidden">
+        <Card className="w-full">
           <CardContent className="p-0">
-            <MacedoniaMap
-              visitedRegions={memoizedVisitedRegions}
-              onRegionToggle={handleRegionToggle}
-            />
+            {isLoadingVisits ? (
+              <div className="flex h-[500px] items-center justify-center">
+                <p className="text-muted-foreground">
+                  Loading your progress...
+                </p>
+              </div>
+            ) : (
+              <MacedoniaMap
+                visitedRegions={memoizedVisitedRegions}
+                onRegionToggle={handleRegionToggle}
+                regions={regions}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -96,8 +191,12 @@ export default function Home() {
             <Button variant="outline" size="sm" onClick={handleShare}>
               Share Map
             </Button>
-            <Button size="sm" onClick={handleSave}>
-              Save Progress
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving || !session?.user}
+            >
+              {isSaving ? "Saving..." : "Save Progress"}
             </Button>
           </CardContent>
         </Card>
