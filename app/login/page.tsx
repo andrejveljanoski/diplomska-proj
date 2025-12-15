@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,7 +26,8 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { login, register } from "@/lib/actions/auth";
+import { signIn } from "next-auth/react";
+import { register } from "@/lib/actions/auth";
 import { toast } from "sonner";
 
 const loginSchema = z.object({
@@ -54,6 +56,8 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [tab, setTab] = useState("login");
+  const router = useRouter();
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -76,17 +80,26 @@ export default function LoginPage() {
   async function onLogin(data: LoginFormValues) {
     setIsLoading(true);
 
-    const formData = new FormData();
-    formData.append("email", data.email);
-    formData.append("password", data.password);
+    try {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
 
-    const result = await login(formData);
-
-    if (result?.error) {
-      toast.error(result.error);
+      if (result?.error) {
+        toast.error(result.error);
+        setIsLoading(false);
+      } else if (result?.ok) {
+        // Successful login - redirect with router
+        toast.success("Logged in successfully!");
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Something went wrong. Please try again.");
       setIsLoading(false);
     }
-    // If successful, Auth.js will redirect automatically
   }
 
   async function onSignup(data: SignupFormValues) {
@@ -108,6 +121,7 @@ export default function LoginPage() {
     if (result?.success) {
       toast.success("Account created! Please sign in.");
       signupForm.reset();
+      setTab("login");
       setIsLoading(false);
     }
   }
@@ -122,7 +136,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>

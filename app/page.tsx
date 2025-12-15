@@ -19,6 +19,8 @@ export default function Home() {
   const [visitedRegions, setVisitedRegions] = useState<Set<string>>(
     () => new Set()
   );
+  // Simple dirty flag: true when user made changes since last save/load
+  const [isDirty, setIsDirty] = useState(false);
 
   const [regions, setRegions] = useState<Region[]>([]);
   const [isLoadingVisits, setIsLoadingVisits] = useState(false);
@@ -44,6 +46,7 @@ export default function Home() {
   useEffect(() => {
     const loadUserVisits = async () => {
       if (status === "authenticated" && session?.user) {
+        setVisitedRegions(new Set()); // Reset before loading
         setIsLoadingVisits(true);
         try {
           const response = await fetch("/api/user-visits");
@@ -53,6 +56,8 @@ export default function Home() {
               visits.map((v: { regionCode: string }) => v.regionCode)
             );
             setVisitedRegions(visitedSet);
+            // loaded state matches saved state -> not dirty
+            setIsDirty(false);
             toast.success("Progress loaded successfully");
           } else if (response.status === 401) {
             toast.error("Please log in to save your progress");
@@ -63,6 +68,9 @@ export default function Home() {
         } finally {
           setIsLoadingVisits(false);
         }
+      } else if (status === "unauthenticated") {
+        setVisitedRegions(new Set()); // Clear on logout
+        setIsDirty(false);
       }
     };
 
@@ -90,6 +98,8 @@ export default function Home() {
         }
         return next;
       });
+      // mark as dirty whenever the user changes a region
+      setIsDirty(true);
     },
     []
   );
@@ -128,6 +138,8 @@ export default function Home() {
       toast.success(
         `Progress saved! (${result.added} added, ${result.removed} removed)`
       );
+      // saved successfully -> no unsaved changes
+      setIsDirty(false);
     } catch (error) {
       console.error("Error saving progress:", error);
       toast.error("Failed to save progress");
@@ -194,7 +206,7 @@ export default function Home() {
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={isSaving || !session?.user}
+              disabled={isSaving || !session?.user || !isDirty}
             >
               {isSaving ? "Saving..." : "Save Progress"}
             </Button>
