@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Region } from "@/lib/db/schema";
 
-// Total regions in North Macedonia
+// Total regions in Macedonia
 const TOTAL_REGIONS = 71;
 
 export default function Home() {

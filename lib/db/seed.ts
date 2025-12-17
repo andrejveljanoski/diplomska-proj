@@ -336,7 +336,7 @@ const macedoniaRegions = [
     name: "Kumanovo",
     population: 105484,
     description:
-      "The third largest city in North Macedonia, known for its industrial heritage and cultural diversity.",
+      "The third largest city in Macedonia, known for its industrial heritage and cultural diversity.",
     image: "https://images.unsplash.com/photo-1583037189850-1921ae7c6c22?w=500",
     placesToVisit: "Staro Nagorichane Monastery, Konjuh Mountain, City Park",
   },
@@ -644,7 +644,7 @@ const macedoniaRegions = [
     name: "Skopje",
     population: 506926,
     description:
-      "The capital and largest city of North Macedonia, located on the Vardar River. A vibrant hub of culture, politics, and economy.",
+      "The capital and largest city in Macedonia, located on the Vardar River. A vibrant hub of culture, politics, and economy.",
     image: "https://images.unsplash.com/photo-1622495589041-64b01885f76d?w=500",
     placesToVisit: "Stone Bridge, Old Bazaar, Kale Fortress, Macedonia Square",
   },

@@ -86,7 +86,7 @@ A web application where users can track and visualize regions in Macedonia they 
 | **Language**       | TypeScript               | Type safety                                   |
 | **Styling**        | Tailwind CSS v4          | Utility-first, fast                           |
 | **UI Components**  | shadcn/ui                | Pre-built, customizable                       |
-| **Map Library**    | amCharts 5               | Interactive SVG maps, North Macedonia geodata |
+| **Map Library**    | amCharts 5               | Interactive SVG maps, Macedonia geodata |
 | **Database**       | Neon (PostgreSQL)        | Serverless, works on all platforms            |
 | **ORM**            | Drizzle ORM              | Type-safe, lightweight, SQL-like              |
 | **Authentication** | Auth.js (NextAuth v5)    | Platform-agnostic, JWT sessions               |
