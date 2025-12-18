@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5map from "@amcharts/amcharts5/map";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -27,8 +27,19 @@ export default function MacedoniaMap({
 }: MacedoniaMapProps) {
   const chartRef = useRef<am5.Root | null>(null);
   const chartDivRef = useRef<HTMLDivElement>(null);
+  const polygonSeriesRef = useRef<am5map.MapPolygonSeries | null>(null);
+  const mkPatternRef = useRef<am5.PicturePattern | null>(null);
+
   // Store visited regions in a ref to access current value in event handlers
   const visitedRegionsRef = useRef<Set<string>>(visitedRegions);
+
+  const onRegionToggleRef = useRef(onRegionToggle);
+
+  // Keep regions in a ref so amCharts event handlers can read latest data without re-init
+  const regionsRef = useRef<MacedoniaMapProps["regions"]>(regions);
+  const regionsByNameRef = useRef<
+    Map<string, NonNullable<MacedoniaMapProps["regions"]>[number]>
+  >(new Map());
 
   const [hoveredRegion, setHoveredRegion] = useState<{
     name: string;
@@ -45,15 +56,86 @@ export default function MacedoniaMap({
   }, [visitedRegions]);
 
   useEffect(() => {
-    if (!chartDivRef.current) return;
-    // Dispose of existing chart if any
-    if (chartRef.current) {
-      chartRef.current.dispose();
+    onRegionToggleRef.current = onRegionToggle;
+  }, [onRegionToggle]);
+
+  useEffect(() => {
+    regionsRef.current = regions;
+    const next = new Map<
+      string,
+      NonNullable<MacedoniaMapProps["regions"]>[number]
+    >();
+    for (const region of regions) {
+      next.set(region.name.trim().toLowerCase(), region);
     }
+    regionsByNameRef.current = next;
+  }, [regions]);
+
+  const extractRegionName = useCallback(
+    (dataItem: am5map.IMapPolygonSeriesDataItem): string | null => {
+      const context = (dataItem as { dataContext?: Record<string, unknown> })
+        .dataContext;
+      if (!context || typeof context !== "object") return null;
+
+      if (typeof context.name === "string") return context.name;
+
+      const properties = context.properties as
+        | Record<string, unknown>
+        | undefined;
+      if (properties && typeof properties.name === "string")
+        return properties.name;
+
+      if (typeof context.id === "string") return context.id;
+
+      return null;
+    },
+    []
+  );
+
+  const syncVisitedStyles = useCallback(() => {
+    const polygonSeries = polygonSeriesRef.current;
+    const pattern = mkPatternRef.current;
+    if (!polygonSeries || !pattern) return;
+
+    polygonSeries.mapPolygons.each((polygon) => {
+      const dataItem = polygon.dataItem as
+        | am5map.IMapPolygonSeriesDataItem
+        | undefined;
+      if (!dataItem) return;
+
+      const regionName = extractRegionName(dataItem);
+      if (!regionName) return;
+
+      const normalized = regionName.trim().toLowerCase();
+      const region = regionsByNameRef.current.get(normalized);
+      if (!region) return;
+
+      if (visitedRegionsRef.current.has(region.code)) {
+        polygon.set("fillPattern", pattern);
+      } else {
+        polygon.set("fill", am5.color(0x8ab7ff));
+        polygon.set("fillPattern", undefined);
+      }
+    });
+  }, [extractRegionName]);
+
+  useEffect(() => {
+    if (!chartDivRef.current) return;
+
+    // Already initialized (can happen with re-renders) — don't recreate the map.
+    if (chartRef.current) return;
 
     // Create root element
     const root = am5.Root.new(chartDivRef.current);
     chartRef.current = root;
+
+    // Reusable visited pattern (avoid creating new am5 objects per polygon)
+    mkPatternRef.current = am5.PicturePattern.new(root, {
+      src: "/images/mkd.png",
+      width: 100,
+      height: 100,
+      centered: true,
+    });
 
     // Set themes
     root.setThemes([am5themes_Animated.new(root)]);
@@ -77,6 +159,7 @@ export default function MacedoniaMap({
         valueField: "value",
       })
     );
+    polygonSeriesRef.current = polygonSeries;
 
     // Configure polygon appearance
     polygonSeries.mapPolygons.template.setAll({
@@ -90,28 +173,6 @@ export default function MacedoniaMap({
     polygonSeries.mapPolygons.template.states.create("hover", {
       fill: am5.color(0xd4af37), // Gold color on hover
     });
-
-    // Helper to extract region name from amCharts dataContext
-    const extractRegionName = (
-      dataItem: am5map.IMapPolygonSeriesDataItem
-    ): string | null => {
-      const context = (dataItem as { dataContext?: Record<string, unknown> })
-        .dataContext;
-      if (!context || typeof context !== "object") return null;
-
-      // Check known property paths in geodata
-      if (typeof context.name === "string") return context.name;
-
-      const properties = context.properties as
-        | Record<string, unknown>
-        | undefined;
-      if (properties && typeof properties.name === "string")
-        return properties.name;
-
-      if (typeof context.id === "string") return context.id;
-
-      return null;
-    };
 
     // Hover event for showing region card
     polygonSeries.mapPolygons.template.events.on("pointerover", function (ev) {
@@ -132,9 +193,7 @@ export default function MacedoniaMap({
 
       const normalized = regionName.trim().toLowerCase();
       // Match by name (normalized region name from geodata)
-      const regionData = regions.find(
-        (r) => r.name.toLowerCase() === normalized
-      );
+      const regionData = regionsByNameRef.current.get(normalized);
 
       const point = ev.point ?? { x: 0, y: 0 };
 
@@ -167,7 +226,7 @@ export default function MacedoniaMap({
       if (!regionName) return;
 
       const normalized = regionName.trim().toLowerCase();
-      const region = regions.find((r) => r.name.toLowerCase() === normalized);
+      const region = regionsByNameRef.current.get(normalized);
 
       if (!region) {
         console.warn(`Region not found in database: ${regionName}`);
@@ -182,48 +241,18 @@ export default function MacedoniaMap({
         polygon.set("fill", am5.color(0x8ab7ff));
         polygon.set("fillPattern", undefined);
       } else {
-        // Mark as visited - update polygon directly with pattern
-        polygon.set(
-          "fillPattern",
-          am5.PicturePattern.new(root, {
-            src: "/images/mkd.png",
-            width: 100,
-            height: 100,
-            centered: true,
-          })
-        );
+        // Mark as visited - update polygon directly with reusable pattern
+        const pattern = mkPatternRef.current;
+        if (pattern) polygon.set("fillPattern", pattern);
       }
 
       // Notify parent of state change
-      onRegionToggle(regionCode, !isCurrentlyVisited);
+      onRegionToggleRef.current(regionCode, !isCurrentlyVisited);
     });
 
     // Initial render of visited state after series is ready
-    polygonSeries.events.once("datavalidated", () => {
-      polygonSeries.mapPolygons.each((polygon) => {
-        const dataItem = polygon.dataItem as
-          | am5map.IMapPolygonSeriesDataItem
-          | undefined;
-        if (!dataItem) return;
-
-        const regionName = extractRegionName(dataItem);
-        if (!regionName) return;
-
-        const normalized = regionName.trim().toLowerCase();
-        const region = regions.find((r) => r.name.toLowerCase() === normalized);
-
-        if (region && visitedRegionsRef.current.has(region.code)) {
-          polygon.set(
-            "fillPattern",
-            am5.PicturePattern.new(root, {
-              src: "/images/mkd.png",
-              width: 100,
-              height: 100,
-              centered: true,
-            })
-          );
-        }
-      });
+    polygonSeries.events.on("datavalidated", () => {
+      syncVisitedStyles();
     });
 
     // Cleanup on unmount
@@ -232,9 +261,16 @@ export default function MacedoniaMap({
         chartRef.current.dispose();
         chartRef.current = null;
       }
+      polygonSeriesRef.current = null;
+      mkPatternRef.current = null;
     };
+  }, [extractRegionName, syncVisitedStyles]);
+
+  // Keep map polygons in sync when data changes (without recreating the map)
+  useEffect(() => {
+    syncVisitedStyles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [regions]);
+  }, [regions, visitedRegions]);
 
   return (
     <div className="relative">

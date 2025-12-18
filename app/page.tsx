@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import MacedoniaMap from "./components/MacedoniaMap";
 import FloatingNavbar from "./components/FloatingNavbar";
@@ -16,15 +16,31 @@ const TOTAL_REGIONS = 71;
 
 export default function Home() {
   const { data: session, status } = useSession();
-  const [visitedRegions, setVisitedRegions] = useState<Set<string>>(
-    () => new Set()
-  );
+  const userKey = session?.user?.email ?? session?.user?.name ?? null;
+
+  // Initialize visited regions from sessionStorage if available
+  const [visitedRegions, setVisitedRegions] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const stored = sessionStorage.getItem("visitedRegions");
+    if (stored) {
+      try {
+        return new Set(JSON.parse(stored));
+      } catch {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
+
   // Simple dirty flag: true when user made changes since last save/load
   const [isDirty, setIsDirty] = useState(false);
 
   const [regions, setRegions] = useState<Region[]>([]);
   const [isLoadingVisits, setIsLoadingVisits] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const visitsLoadInFlightRef = useRef(false);
+  const hasLoadedFromServerRef = useRef(false);
 
   useEffect(() => {
     const fetchRegions = async () => {
@@ -42,40 +58,70 @@ export default function Home() {
     fetchRegions();
   }, []);
 
-  // Load saved visited regions when user logs in
+  // Sync visitedRegions to sessionStorage whenever it changes
   useEffect(() => {
-    const loadUserVisits = async () => {
-      if (status === "authenticated" && session?.user) {
-        setVisitedRegions(new Set()); // Reset before loading
-        setIsLoadingVisits(true);
-        try {
-          const response = await fetch("/api/user-visits");
-          if (response.ok) {
-            const visits = await response.json();
-            const visitedSet = new Set<string>(
-              visits.map((v: { regionCode: string }) => v.regionCode)
-            );
-            setVisitedRegions(visitedSet);
-            // loaded state matches saved state -> not dirty
-            setIsDirty(false);
-            toast.success("Progress loaded successfully");
-          } else if (response.status === 401) {
-            toast.error("Please log in to save your progress");
-          }
-        } catch (error) {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        "visitedRegions",
+        JSON.stringify(Array.from(visitedRegions))
+      );
+    }
+  }, [visitedRegions]);
+
+  // Load saved visited regions from server ONCE per session (if not already loaded)
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      setVisitedRegions(new Set());
+      setIsDirty(false);
+      setIsLoadingVisits(false);
+      visitsLoadInFlightRef.current = false;
+      hasLoadedFromServerRef.current = false;
+      sessionStorage.removeItem("visitedRegions");
+      return;
+    }
+
+    if (status !== "authenticated" || !userKey) return;
+    if (visitsLoadInFlightRef.current || hasLoadedFromServerRef.current) return;
+
+    const controller = new AbortController();
+    visitsLoadInFlightRef.current = true;
+    setIsLoadingVisits(true);
+
+    (async () => {
+      try {
+        const response = await fetch("/api/user-visits", {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const visits = await response.json();
+          const visitedSet = new Set<string>(
+            visits.map((v: { regionCode: string }) => v.regionCode)
+          );
+          setVisitedRegions(visitedSet);
+          setIsDirty(false);
+          hasLoadedFromServerRef.current = true;
+          toast.success("Progress loaded successfully", {
+            id: `progress-loaded-${userKey}`,
+          });
+        } else if (response.status === 401) {
+          toast.error("Please log in to save your progress");
+        }
+      } catch (error) {
+        if ((error as { name?: string }).name !== "AbortError") {
           console.error("Error loading user visits:", error);
           toast.error("Failed to load saved progress");
-        } finally {
-          setIsLoadingVisits(false);
         }
-      } else if (status === "unauthenticated") {
-        setVisitedRegions(new Set()); // Clear on logout
-        setIsDirty(false);
+      } finally {
+        setIsLoadingVisits(false);
+        visitsLoadInFlightRef.current = false;
       }
-    };
+    })();
 
-    loadUserVisits();
-  }, [status, session]);
+    return () => {
+      controller.abort();
+    };
+  }, [status, userKey]);
 
   // Memoize the visited regions set for stable reference
   const memoizedVisitedRegions = useMemo(
@@ -181,19 +227,20 @@ export default function Home() {
         {/* Map */}
         <Card className="w-full">
           <CardContent className="p-0">
-            {isLoadingVisits ? (
-              <div className="flex h-[500px] items-center justify-center">
-                <p className="text-muted-foreground">
-                  Loading your progress...
-                </p>
-              </div>
-            ) : (
+            <div className="relative">
               <MacedoniaMap
                 visitedRegions={memoizedVisitedRegions}
                 onRegionToggle={handleRegionToggle}
                 regions={regions}
               />
-            )}
+              {isLoadingVisits && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+                  <p className="text-muted-foreground">
+                    Loading your progress...
+                  </p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
