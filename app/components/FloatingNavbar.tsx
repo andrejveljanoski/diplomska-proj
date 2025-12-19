@@ -16,6 +16,11 @@ export default function FloatingNavbar() {
         link: "/",
         icon: <span className="text-sm">🏠</span>,
       },
+      {
+        name: "Regions",
+        link: "/regions",
+        icon: <span className="text-sm">🗺️</span>,
+      },
     ];
 
     if (session?.user) {
