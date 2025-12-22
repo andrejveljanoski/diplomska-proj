@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import FloatingNavbar from "@/app/components/FloatingNavbar";
 import {
   Card,
@@ -18,6 +16,11 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, MapPin, Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Region } from "@/lib/db/schema";
+import {
+  useRegion,
+  useUserVisits,
+  useToggleRegionVisit,
+} from "@/lib/hooks/useRegions";
 
 export default function RegionDetailPage() {
   const params = useParams();
@@ -25,10 +28,19 @@ export default function RegionDetailPage() {
   const { data: session } = useSession();
   const regionCode = params.code as string;
 
-  const [region, setRegion] = useState<Region | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isVisited, setIsVisited] = useState(false);
-  const [isToggling, setIsToggling] = useState(false);
+  // Fetch region data using React Query
+  const {
+    data: region,
+    isLoading,
+    error,
+  } = useRegion(regionCode, !!regionCode);
+
+  // Fetch user visits to check if this region is visited
+  const { data: visits = [] } = useUserVisits(!!session?.user);
+  const isVisited = visits.some((v) => v.regionCode === regionCode);
+
+  // Toggle visit mutation with optimistic updates
+  const toggleVisitMutation = useToggleRegionVisit();
 
   // Mock data for demo purposes
   const mockRegionData: Partial<Region> = {
@@ -38,56 +50,15 @@ export default function RegionDetailPage() {
       "• Historic Old Town - Wander through cobblestone streets and discover centuries-old architecture\n• Regional Museum - Learn about the area's fascinating history and cultural traditions\n• Natural Park - Hike through pristine forests and enjoy breathtaking mountain views\n• Traditional Bazaar - Shop for local crafts, textiles, and artisanal products\n• Monastery Complex - Visit ancient religious sites with stunning frescoes and peaceful grounds\n• Scenic Viewpoint - Capture panoramic photos of the valley and surrounding peaks\n• Local Wineries - Taste regional wines and learn about traditional winemaking methods\n• Cultural Center - Attend performances showcasing traditional music and dance",
   };
 
-  useEffect(() => {
-    const fetchRegion = async () => {
-      try {
-        const response = await fetch(`/api/regions/${regionCode}`);
-        if (!response.ok) {
-          throw new Error("Region not found");
-        }
-        const data: Region = await response.json();
-
-        // Merge with mock data for richer content
-        const enrichedRegion: Region = {
-          ...data,
-          description: data.description || mockRegionData.description || null,
-          placesToVisit:
-            data.placesToVisit || mockRegionData.placesToVisit || null,
-        };
-
-        setRegion(enrichedRegion);
-      } catch (error) {
-        console.error("Error fetching region:", error);
-        toast.error("Failed to load region details");
-      } finally {
-        setIsLoading(false);
+  // Merge with mock data for richer content
+  const enrichedRegion = region
+    ? {
+        ...region,
+        description: region.description || mockRegionData.description || null,
+        placesToVisit:
+          region.placesToVisit || mockRegionData.placesToVisit || null,
       }
-    };
-
-    fetchRegion();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [regionCode]);
-
-  useEffect(() => {
-    const checkVisitStatus = async () => {
-      if (!session?.user) return;
-
-      try {
-        const response = await fetch("/api/user-visits");
-        if (response.ok) {
-          const visits = await response.json();
-          const visited = visits.some(
-            (v: { regionCode: string }) => v.regionCode === regionCode
-          );
-          setIsVisited(visited);
-        }
-      } catch (error) {
-        console.error("Error checking visit status:", error);
-      }
-    };
-
-    checkVisitStatus();
-  }, [session, regionCode]);
+    : null;
 
   const handleToggleVisit = async () => {
     if (!session?.user) {
@@ -95,45 +66,22 @@ export default function RegionDetailPage() {
       return;
     }
 
-    setIsToggling(true);
-    try {
-      // Get current visits
-      const response = await fetch("/api/user-visits");
-      if (!response.ok) throw new Error("Failed to fetch visits");
-
-      const visits = await response.json();
-      const visitedCodes = visits.map(
-        (v: { regionCode: string }) => v.regionCode
-      );
-
-      // Toggle current region
-      const updatedCodes = isVisited
-        ? visitedCodes.filter((code: string) => code !== regionCode)
-        : [...visitedCodes, regionCode];
-
-      // Save updated visits
-      const saveResponse = await fetch("/api/user-visits", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    toggleVisitMutation.mutate(
+      {
+        regionCode,
+        isVisited: !isVisited,
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            isVisited ? "Removed from visited regions" : "Marked as visited!"
+          );
         },
-        body: JSON.stringify({
-          visitedRegionCodes: updatedCodes,
-        }),
-      });
-
-      if (!saveResponse.ok) throw new Error("Failed to save");
-
-      setIsVisited(!isVisited);
-      toast.success(
-        isVisited ? "Removed from visited regions" : "Marked as visited!"
-      );
-    } catch (error) {
-      console.error("Error toggling visit:", error);
-      toast.error("Failed to update visit status");
-    } finally {
-      setIsToggling(false);
-    }
+        onError: () => {
+          toast.error("Failed to update visit status");
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -149,7 +97,7 @@ export default function RegionDetailPage() {
     );
   }
 
-  if (!region) {
+  if (error || !enrichedRegion) {
     return (
       <>
         <FloatingNavbar />
@@ -190,50 +138,81 @@ export default function RegionDetailPage() {
 
         {/* Hero Section */}
         <Card className="overflow-hidden">
-          {region.image && (
-            <div className="relative h-64 w-full overflow-hidden bg-muted">
-              <Image
-                src={region.image}
-                alt={region.name}
+          {enrichedRegion.image && (
+            <div className="relative h-80 w-full overflow-hidden bg-muted">
+              {/* <Image
+                src={enrichedRegion.image}
+                alt={enrichedRegion.name}
                 fill
                 className="object-cover"
                 priority
-              />
+              /> */}
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 text-white">
+                <h1 className="text-5xl font-bold drop-shadow-lg">
+                  {enrichedRegion.name}
+                </h1>
+                <p className="mt-2 flex items-center gap-2 text-lg opacity-90">
+                  <MapPin className="h-5 w-5" />
+                  {enrichedRegion.code.toUpperCase()}
+                </p>
+              </div>
             </div>
           )}
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-4xl">{region.name}</CardTitle>
-                <CardDescription className="mt-2 flex items-center gap-2 text-base">
-                  <MapPin className="h-4 w-4" />
-                  Region Code: {region.code}
-                </CardDescription>
+          {!enrichedRegion.image && (
+            <CardHeader className="pb-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-5xl">
+                    {enrichedRegion.name}
+                  </CardTitle>
+                  <CardDescription className="mt-3 flex items-center gap-2 text-lg">
+                    <MapPin className="h-5 w-5" />
+                    Region Code: {enrichedRegion.code.toUpperCase()}
+                  </CardDescription>
+                </div>
+                {isVisited && (
+                  <Badge variant="default" className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Visited
+                  </Badge>
+                )}
               </div>
+            </CardHeader>
+          )}
+          <CardContent className="space-y-6 py-6">
+            <div className="flex flex-wrap items-center gap-4">
+              {enrichedRegion.population && (
+                <div className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2">
+                  <Users className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Population</p>
+                    <p className="text-lg font-semibold">
+                      {enrichedRegion.population.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              )}
               {isVisited && (
-                <Badge variant="default" className="flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Visited
+                <Badge
+                  variant="default"
+                  className="flex items-center gap-1 px-4 py-2 text-sm"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Visited Region
                 </Badge>
               )}
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {region.population && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>Population: {region.population.toLocaleString()}</span>
-              </div>
-            )}
 
             {session?.user && (
               <Button
                 onClick={handleToggleVisit}
-                disabled={isToggling}
+                disabled={toggleVisitMutation.isPending}
                 variant={isVisited ? "outline" : "default"}
+                size="lg"
                 className="w-full sm:w-auto"
               >
-                {isToggling
+                {toggleVisitMutation.isPending
                   ? "Updating..."
                   : isVisited
                   ? "Mark as Not Visited"
@@ -244,29 +223,31 @@ export default function RegionDetailPage() {
         </Card>
 
         {/* Description */}
-        {region.description && (
+        {enrichedRegion.description && (
           <Card>
             <CardHeader>
-              <CardTitle>About {region.name}</CardTitle>
+              <CardTitle className="text-2xl">
+                About {enrichedRegion.name}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {region.description}
+              <p className="text-base leading-relaxed text-muted-foreground">
+                {enrichedRegion.description}
               </p>
             </CardContent>
           </Card>
         )}
 
         {/* Places to Visit */}
-        {region.placesToVisit && (
+        {enrichedRegion.placesToVisit && (
           <Card>
             <CardHeader>
-              <CardTitle>Places to Visit</CardTitle>
+              <CardTitle className="text-2xl">Places to Visit</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                {region.placesToVisit}
-              </p>
+              <div className="space-y-2 text-base leading-relaxed text-muted-foreground whitespace-pre-line">
+                {enrichedRegion.placesToVisit}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -276,28 +257,34 @@ export default function RegionDetailPage() {
         {/* Additional Info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Region Information
-            </CardTitle>
+            <CardTitle className="text-lg">Region Information</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Region Code:</span>
-              <span className="font-medium">{region.code}</span>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Region Code
+              </p>
+              <p className="text-lg font-semibold">
+                {enrichedRegion.code.toUpperCase()}
+              </p>
             </div>
-            {region.population && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Population:</span>
-                <span className="font-medium">
-                  {region.population.toLocaleString()}
-                </span>
+            {enrichedRegion.population && (
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Population
+                </p>
+                <p className="text-lg font-semibold">
+                  {enrichedRegion.population.toLocaleString()}
+                </p>
               </div>
             )}
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Added:</span>
-              <span className="font-medium">
-                {new Date(region.createdAt).toLocaleDateString()}
-              </span>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Added to Database
+              </p>
+              <p className="text-lg font-semibold">
+                {new Date(enrichedRegion.createdAt).toLocaleDateString()}
+              </p>
             </div>
           </CardContent>
         </Card>
