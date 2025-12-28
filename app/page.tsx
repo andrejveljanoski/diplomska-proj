@@ -70,31 +70,29 @@ export default function Home() {
     []
   );
 
-  // Handle share
-  const handleShare = useCallback(async () => {
-    const url = window.location.href;
-    const text = `I've explored ${visitedCount} out of ${TOTAL_REGIONS} regions in Macedonia! (${progressPercent.toFixed(
-      1
-    )}%)`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "My Macedonia Map Progress",
-          text,
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
-        toast.success("Link copied to clipboard!");
-      }
-    } catch (error) {
-      if ((error as { name?: string }).name !== "AbortError") {
-        console.error("Error sharing:", error);
-        toast.error("Failed to share");
-      }
+  // Handle save
+  const handleSave = useCallback(async () => {
+    if (!session?.user) {
+      toast.error("Please log in to save your progress");
+      return;
     }
-  }, [visitedCount, progressPercent]);
+
+    saveVisitsMutation.mutate(
+      {
+        visitedRegionCodes: Array.from(localVisitedRegions),
+      },
+      {
+        onSuccess: () => {
+          setIsDirty(false);
+          toast.success("Progress saved successfully!");
+          // No need to refetch - React Query auto-updates cache from mutation
+        },
+        onError: () => {
+          toast.error("Failed to save progress");
+        },
+      }
+    );
+  }, [session, localVisitedRegions, saveVisitsMutation]);
 
   return (
     <>
@@ -149,8 +147,14 @@ export default function Home() {
         {/* Action Buttons */}
         <Card className="w-full">
           <CardContent className="flex justify-center gap-4 p-4">
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              Share Map
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={
+                saveVisitsMutation.isPending || !session?.user || !isDirty
+              }
+            >
+              {saveVisitsMutation.isPending ? "Saving..." : "Save Progress"}
             </Button>
           </CardContent>
         </Card>
