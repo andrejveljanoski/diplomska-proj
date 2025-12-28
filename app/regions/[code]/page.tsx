@@ -45,9 +45,9 @@ export default function RegionDetailPage() {
   // Mock data for demo purposes
   const mockRegionData: Partial<Region> = {
     description:
-      "This region is known for its rich cultural heritage, stunning natural landscapes, and vibrant local communities. Visitors can explore historic sites, enjoy traditional cuisine, and experience the warmth of Macedonian hospitality. The region offers a perfect blend of urban attractions and rural charm, making it an ideal destination for travelers seeking authentic experiences.",
+      "This region offers unique cultural heritage, stunning natural landscapes, and vibrant local communities. Visitors can explore historic sites, enjoy traditional cuisine, and experience the warmth of Macedonian hospitality.",
     placesToVisit:
-      "• Historic Old Town - Wander through cobblestone streets and discover centuries-old architecture\n• Regional Museum - Learn about the area's fascinating history and cultural traditions\n• Natural Park - Hike through pristine forests and enjoy breathtaking mountain views\n• Traditional Bazaar - Shop for local crafts, textiles, and artisanal products\n• Monastery Complex - Visit ancient religious sites with stunning frescoes and peaceful grounds\n• Scenic Viewpoint - Capture panoramic photos of the valley and surrounding peaks\n• Local Wineries - Taste regional wines and learn about traditional winemaking methods\n• Cultural Center - Attend performances showcasing traditional music and dance",
+      "• Historic Sites - Explore centuries-old architecture and cultural landmarks\n• Museums - Learn about the area's fascinating history and traditions\n• Natural Parks - Hike through pristine forests and enjoy mountain views\n• Local Markets - Shop for traditional crafts and artisanal products\n• Religious Sites - Visit ancient monasteries and spiritual centers\n• Scenic Viewpoints - Capture panoramic views of the landscape\n• Local Wineries - Taste regional wines and learn traditional methods\n• Cultural Venues - Attend performances showcasing traditional arts",
   };
 
   // Merge with mock data for richer content

@@ -16,6 +16,7 @@ interface MacedoniaMapProps {
     name: string;
     image?: string | null;
     description?: string | null;
+    shortDescription?: string | null;
     placesToVisit?: string | null;
   }>;
 }
@@ -200,7 +201,7 @@ export default function MacedoniaMap({
       setHoveredRegion({
         name: regionData?.name ?? regionName,
         image: regionData?.image ?? null,
-        description: regionData?.description ?? null,
+        description: regionData?.shortDescription ?? null,
         placesToVisit: regionData?.placesToVisit ?? null,
         x: point.x,
         y: point.y,

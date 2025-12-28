@@ -40,9 +40,10 @@ export const regions = pgTable("regions", {
   code: varchar("code", { length: 50 }).unique().notNull(), // Unique identifier matching geodata
   name: varchar("name", { length: 100 }).notNull(),
   population: integer("population"),
-  description: varchar("description", { length: 1000 }),
+  shortDescription: varchar("short_description", { length: 200 }),
+  description: varchar("description", { length: 2000 }),
   image: varchar("image", { length: 500 }),
-  placesToVisit: varchar("places_to_visit", { length: 500 }),
+  placesToVisit: varchar("places_to_visit", { length: 1000 }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
 

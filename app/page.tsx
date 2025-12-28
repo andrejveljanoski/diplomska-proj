@@ -70,30 +70,6 @@ export default function Home() {
     []
   );
 
-  // Handle save
-  const handleSave = useCallback(async () => {
-    if (!session?.user) {
-      toast.error("Please log in to save your progress");
-      return;
-    }
-
-    saveVisitsMutation.mutate(
-      {
-        visitedRegionCodes: Array.from(localVisitedRegions),
-      },
-      {
-        onSuccess: () => {
-          setIsDirty(false);
-          toast.success("Progress saved successfully!");
-          // No need to refetch - React Query auto-updates cache from mutation
-        },
-        onError: () => {
-          toast.error("Failed to save progress");
-        },
-      }
-    );
-  }, [session, localVisitedRegions, saveVisitsMutation]);
-
   // Handle share
   const handleShare = useCallback(async () => {
     const url = window.location.href;
@@ -175,15 +151,6 @@ export default function Home() {
           <CardContent className="flex justify-center gap-4 p-4">
             <Button variant="outline" size="sm" onClick={handleShare}>
               Share Map
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={
-                saveVisitsMutation.isPending || !session?.user || !isDirty
-              }
-            >
-              {saveVisitsMutation.isPending ? "Saving..." : "Save Progress"}
             </Button>
           </CardContent>
         </Card>
