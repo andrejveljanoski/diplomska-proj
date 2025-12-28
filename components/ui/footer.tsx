@@ -1,29 +1,20 @@
 import { Separator } from "@/components/ui/separator";
-import {
-  DribbbleIcon,
-  GithubIcon,
-  TwitchIcon,
-  TwitterIcon,
-} from "lucide-react";
+import { GithubIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
 const footerLinks = [
   {
-    title: "Overview",
-    href: "#",
-  },
-  {
     title: "Features",
-    href: "#",
+    href: "/features",
   },
   {
     title: "Help",
-    href: "#",
+    href: "/help",
   },
   {
     title: "Privacy",
-    href: "#",
+    href: "/privacy",
   },
 ];
 
@@ -68,16 +59,7 @@ const Footer = () => {
           </span>
 
           <div className="flex items-center gap-5 text-muted-foreground">
-            <Link href="#" target="_blank">
-              <TwitterIcon className="h-5 w-5" />
-            </Link>
-            <Link href="#" target="_blank">
-              <DribbbleIcon className="h-5 w-5" />
-            </Link>
-            <Link href="#" target="_blank">
-              <TwitchIcon className="h-5 w-5" />
-            </Link>
-            <Link href="#" target="_blank">
+            <Link href="https://github.com/andrejveljanoski" target="_blank">
               <GithubIcon className="h-5 w-5" />
             </Link>
           </div>
