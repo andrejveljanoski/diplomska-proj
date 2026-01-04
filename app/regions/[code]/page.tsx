@@ -21,6 +21,8 @@ import {
   useUserVisits,
   useToggleRegionVisit,
 } from "@/lib/hooks/useRegions";
+import { AdminRegionEditor } from "@/components/ui/admin-region-editor";
+import { ImageCarousel } from "@/components/ui/image-carousel";
 
 export default function RegionDetailPage() {
   const params = useParams();
@@ -125,30 +127,40 @@ export default function RegionDetailPage() {
       <FloatingNavbar />
 
       <section className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6 pt-32">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push("/")}
-          className="w-fit"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Map
-        </Button>
+        {/* Back Button and Admin Editor */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/")}
+            className="w-fit"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Map
+          </Button>
+          <AdminRegionEditor 
+            region={enrichedRegion} 
+            onUpdate={() => window.location.reload()} 
+          />
+        </div>
 
         {/* Hero Section */}
         <Card className="overflow-hidden">
-          {enrichedRegion.image && (
-            <div className="relative h-80 w-full overflow-hidden bg-muted">
-              {/* <Image
-                src={enrichedRegion.image}
+          {(enrichedRegion.images?.length || enrichedRegion.image) ? (
+            <div className="relative">
+              <ImageCarousel
+                images={enrichedRegion.images && enrichedRegion.images.length > 0 
+                  ? enrichedRegion.images 
+                  : enrichedRegion.image 
+                  ? [enrichedRegion.image] 
+                  : []}
                 alt={enrichedRegion.name}
-                fill
-                className="object-cover"
-                priority
-              /> */}
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 text-white">
+                className="h-96"
+                showControls={true}
+                showCounter={false}
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent pointer-events-none" />
+              <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
                 <h1 className="text-5xl font-bold drop-shadow-lg">
                   {enrichedRegion.name}
                 </h1>
@@ -158,8 +170,7 @@ export default function RegionDetailPage() {
                 </p>
               </div>
             </div>
-          )}
-          {!enrichedRegion.image && (
+          ) : (
             <CardHeader className="pb-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

@@ -24,6 +24,7 @@ import { MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Region } from "@/lib/db/schema";
 import { useRegions } from "@/lib/hooks/useRegions";
+import Image from "next/image";
 
 type SortOption =
   | "name-asc"
@@ -214,45 +215,51 @@ export default function RegionsListPage() {
 
         {/* Regions Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleRegions.map((region) => (
-            <Card
-              key={region.id}
-              className="group cursor-pointer transition-all hover:shadow-lg"
-              onClick={() => router.push(`/regions/${region.code}`)}
-            >
-              {region.image && (
+          {visibleRegions.map((region) => {
+            // Get first image from images array or fallback to single image field
+            const firstImage = region.images && region.images.length > 0 
+              ? region.images[0] 
+              : region.image || "/images/mkd.png";
+            
+            return (
+              <Card
+                key={region.id}
+                className="group cursor-pointer transition-all hover:shadow-lg"
+                onClick={() => router.push(`/regions/${region.code}`)}
+              >
                 <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-muted">
-                  {/* <Image
-                    src={region.image}
+                  <Image
+                    src={firstImage}
                     alt={region.name}
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
-                  /> */}
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
                 </div>
-              )}
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-xl">{region.name}</CardTitle>
-                  <Badge variant="secondary" className="shrink-0">
-                    {region.code}
-                  </Badge>
-                </div>
-                {region.population && (
-                  <CardDescription className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    Pop: {region.population.toLocaleString()}
-                  </CardDescription>
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-xl">{region.name}</CardTitle>
+                    <Badge variant="secondary" className="shrink-0">
+                      {region.code}
+                    </Badge>
+                  </div>
+                  {region.population && (
+                    <CardDescription className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Pop: {region.population.toLocaleString()}
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                {region.description && (
+                  <CardContent>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {region.description}
+                    </p>
+                  </CardContent>
                 )}
-              </CardHeader>
-              {region.description && (
-                <CardContent>
-                  <p className="line-clamp-2 text-sm text-muted-foreground">
-                    {region.description}
-                  </p>
-                </CardContent>
-              )}
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
 
         {/* Load more trigger */}
