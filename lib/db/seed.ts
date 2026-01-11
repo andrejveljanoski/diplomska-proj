@@ -746,11 +746,11 @@ const macedoniaRegions = [
   },
   {
     code: "mk-67",
-    name: "Čučer-Sandevo",
+    name: "Čučer Sandevo",
     population: 8448,
     shortDescription: "Suburban Skopje with monastic heritage",
     description:
-      "A municipality in the Skopje region with suburban character. Čučer-Sandevo maintains monastic heritage while serving as residential area. The area offers peaceful surroundings near the capital.",
+      "A municipality in the Skopje region with suburban character. Čučer Sandevo maintains monastic heritage while serving as residential area. The area offers peaceful surroundings near the capital.",
     image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500",
     placesToVisit:
       "Čučer Monastery, Suburban Areas, Nature Trails, Parks, Day-trip Destinations",

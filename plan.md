@@ -68,17 +68,17 @@
 
 ### 3.1 Application Concept
 
-**Proposed App: Scratch Map / Visited Places Tracker (Macedonia)**
+**App: Macedonia Regions Visited Tracker**
 
-A web application where users can track and visualize regions in Macedonia they have visited, similar to a physical scratch map.
+A web application where users can track and visualize regions in Macedonia they have visited, similar to a scratch map.
 
 - Interactive Macedonia map with clickable municipalities (80 regions)
-- User profiles with personal travel statistics
+- User profiles with travel statistics
 - Public/private map sharing
-- Travel goals and bucket list features
 - Visit history with timestamps, notes, ratings
+- Admin region editor (UI for region data)
 
-### 3.2 Technical Stack
+### 3.2 Technical Stack (Current)
 
 | Component          | Technology               | Reason                                        |
 | ------------------ | ------------------------ | --------------------------------------------- |
@@ -86,254 +86,132 @@ A web application where users can track and visualize regions in Macedonia they 
 | **Language**       | TypeScript               | Type safety                                   |
 | **Styling**        | Tailwind CSS v4          | Utility-first, fast                           |
 | **UI Components**  | shadcn/ui                | Pre-built, customizable                       |
-| **Map Library**    | amCharts 5               | Interactive SVG maps, Macedonia geodata |
+| **Map Library**    | amCharts 5               | Interactive SVG maps, Macedonia geodata        |
 | **Database**       | Neon (PostgreSQL)        | Serverless, works on all platforms            |
 | **ORM**            | Drizzle ORM              | Type-safe, lightweight, SQL-like              |
 | **Authentication** | Auth.js (NextAuth v5)    | Platform-agnostic, JWT sessions               |
+| **Image Storage**  | Cloudflare R2            | Object storage for region images              |
 | **Animations**     | Framer Motion            | Smooth UI transitions                         |
 
-### 3.3 Database Schema
+### 3.3 Database Schema (Current)
 
 ```
-┌─────────────────┐     ┌────────────────────┐     ┌─────────────────┐
-│     users       │     │    userVisits      │     │    regions      │
-├─────────────────┤     ├────────────────────┤     ├─────────────────┤
-│ id (PK)         │────<│ userId (FK)        │     │ id (PK)         │
-│ email           │     │ regionCode (FK)    │>────│ code (unique)   │
-│ password        │     │ visitedAt          │     │ name            │
-│ name            │     │ notes              │     │ population      │
-│ createdAt       │     │ rating             │     │ area            │
-└─────────────────┘     └────────────────────┘     └─────────────────┘
+┌───────────────┐     ┌────────────────────┐     ┌─────────────────┐
+│    users      │     │    userVisits      │     │    regions      │
+├───────────────┤     ├────────────────────┤     ├─────────────────┤
+│ id (PK)       │────<│ userId (FK)        │     │ id (PK)         │
+│ email         │     │ regionCode (FK)    │>────│ code (unique)   │
+│ name          │     │ visitedAt          │     │ name            │
+│ createdAt     │     │ notes              │     │ population      │
+│ ...           │     │ rating             │     │ ...             │
+└───────────────┘     └────────────────────┘     └─────────────────┘
 ```
 
-**Key Relationships (Updated):**
+- `regions` table uses a unique `code` (e.g. `mk-67`) matching geodata
+- All region lookups and user visits use this code for consistency
+- Region names in DB now match geodata (e.g. "Čučer Sandevo")
+- Admin UI allows editing region data
 
-- User HAS MANY visits
-- Region HAS MANY visits
-- Visit BELONGS TO User and Region (by regionCode)
+### 3.4 Application Features (Current)
 
-**Schema/Backend Improvements:**
+- [x] Interactive Macedonia map (amCharts 5)
+- [x] User authentication (Auth.js)
+- [x] User dashboard with travel stats
+- [x] Region details pages (`/regions/[code]`)
+- [x] Admin region editor (UI)
+- [x] Image upload for regions (R2)
+- [x] Public user profiles
+- [x] CRUD for visits (API routes)
+- [x] Mobile responsive UI
+- [x] Leaderboard and statistics
+- [x] Floating navbar, modern UI
+- [x] All region names and codes normalized to geodata
+- [x] Database and API use region codes directly
+- [x] All region hover cards work (including Čučer Sandevo)
 
-- `regions` table now has a unique `code` field (e.g. `skopje`, `bitola`), used as a stable identifier and foreign key
-- `userVisits` references `regionCode` (not numeric id)
-- All API and map logic now uses region codes directly (no mapping needed)
-- Database and API are simpler, more robust, and easier to maintain
-
-**Example Queries (Unchanged):**
-
-- Get user's visited regions (JOIN userVisits + regions ON regionCode)
-- Calculate user progress (visited / total regions)
-- Leaderboard (GROUP BY userId, COUNT visits)
-- Region statistics (most visited, least visited)
-
-### 3.4 Application Features
-
-1. **Homepage/Landing** - Interactive Macedonia map, marketing content
-2. **Interactive Map View** - Click to mark regions as visited (amCharts 5)
-3. **User Dashboard** - Travel statistics, progress bar, recent visits
-4. **Region Details** - Dynamic routes (`/region/[code]`), SSR
-5. **User Profiles** - Public shareable maps
-6. **Authentication** - Email/password + OAuth (Google, GitHub)
-7. **API Routes / Server Actions** - CRUD for visits
-8. **Admin Panel** - User management, analytics
-
-### 3.5 Why SQL over NoSQL
-
-| Requirement                | SQL (PostgreSQL) | NoSQL (MongoDB) |
-| -------------------------- | ---------------- | --------------- |
-| User → Visits → Regions    | ✅ JOINs         | ⚠️ Denormalized |
-| "Users who visited Skopje" | ✅ Simple JOIN   | ⚠️ Aggregation  |
-| Statistics (COUNT, AVG)    | ✅ Built-in      | ⚠️ Complex      |
-| Data integrity             | ✅ Foreign keys  | ❌ None         |
-
-### 3.6 Development Milestones
+### 3.5 Development Milestones (Updated)
 
 - [x] Project setup and configuration
 - [x] UI components (shadcn/ui)
 - [x] Interactive map (amCharts 5)
 - [x] Floating navbar
 - [x] Login/Signup page UI
-- [ ] Database schema (Drizzle + Neon)
-- [ ] Authentication (Auth.js)
-- [ ] Server Actions for visits
-- [ ] User dashboard
-- [ ] Testing and optimization
+- [x] Database schema (Drizzle + Neon)
+- [x] Authentication (Auth.js)
+- [x] Server Actions for visits
+- [x] User dashboard
+- [x] Admin region editor
+- [x] Image upload (R2)
+- [x] Region hover cards (all regions)
+- [x] Testing and optimization
 
 ---
 
 ## 4. Deployment Strategies
 
-### 4.1 Vercel (Platform as a Service)
-
-- Native Next.js deployment
-- Edge Functions
-- Serverless functions
-- Analytics and monitoring
-- Preview deployments
-
-### 4.2 AWS Deployment Options
-
-- **AWS Amplify** - Managed hosting
-- **EC2 + Load Balancer** - Traditional server
-- **ECS/Fargate** - Container orchestration
-- **Lambda@Edge** - Serverless edge deployment
-
-### 4.3 Docker/Self-Hosted
-
-- Docker containerization
-- Docker Compose setup
-- VPS deployment (DigitalOcean, Linode)
-- Kubernetes (optional advanced)
-
-### 4.4 Netlify
-
-- Static export deployment
-- Serverless functions
-- Edge functions comparison with Vercel
-
-### 4.5 Other Options (Brief Overview)
-
-- Railway
-- Render
-- Fly.io
+- Vercel (PaaS, edge/serverless)
+- AWS (Amplify, EC2, ECS/Fargate, Lambda@Edge)
+- Docker/Self-hosted (VPS, Compose)
+- Netlify (static export, edge/serverless)
+- Others: Railway, Render, Fly.io (brief)
 
 ---
 
 ## 5. Comparison Methodology
 
-### 5.1 Performance Testing
-
-- Lighthouse scores
-- WebPageTest analysis
-- Load testing (k6, Artillery)
-- Real User Monitoring (RUM)
-
-### 5.2 Cost Analysis
-
-- Free tier limitations
-- Scaling costs estimation
-- Hidden costs (bandwidth, functions, etc.)
-
-### 5.3 Developer Experience
-
-- Deployment ease
-- CI/CD integration
-- Rollback capabilities
-- Logging and debugging
-
-### 5.4 Scalability Assessment
-
-- Auto-scaling capabilities
-- Geographic distribution
-- Cold start analysis
+- Performance: Lighthouse, WebPageTest, load testing
+- Cost: Free tier, scaling, hidden costs
+- Developer Experience: CI/CD, rollback, logging
+- Scalability: auto-scaling, geo-distribution, cold starts
 
 ---
 
-## 6. Expected Results Structure
+## 6. Results & Recommendations
 
-### 6.1 Comparison Matrix
-
-| Criteria            | Vercel | AWS Amplify | AWS EC2 | Docker/VPS | Netlify |
-| ------------------- | ------ | ----------- | ------- | ---------- | ------- |
-| Setup Complexity    |        |             |         |            |         |
-| Performance         |        |             |         |            |         |
-| Cost (Low Traffic)  |        |             |         |            |         |
-| Cost (High Traffic) |        |             |         |            |         |
-| Scalability         |        |             |         |            |         |
-| DX Score            |        |             |         |            |         |
-
-### 6.2 Use Case Recommendations
-
-- Best for startups/MVPs
-- Best for enterprise
-- Best for budget-conscious
-- Best for maximum control
+- Comparison matrix (criteria: setup, performance, cost, scalability, DX)
+- Use case recommendations (startup, enterprise, budget, control)
 
 ---
 
 ## 7. Thesis Structure
 
-1. **Introduction** (5-10 pages)
-2. **Theoretical Background** (15-20 pages)
-3. **Application Development** (15-20 pages)
-4. **Deployment Implementation** (20-25 pages)
-5. **Comparative Analysis** (15-20 pages)
-6. **Conclusion and Recommendations** (5-10 pages)
-7. **References**
-8. **Appendices** (Code samples, configurations)
+1. Introduction
+2. Theoretical Background
+3. Application Development
+4. Deployment Implementation
+5. Comparative Analysis
+6. Conclusion and Recommendations
+7. References
+8. Appendices
 
 ---
 
 ## 8. Timeline
 
-### Phase 1: Research & Planning (Weeks 1-2)
-
-- Literature review
-- Define application requirements
-- Set up development environment
-
-### Phase 2: Application Development (Weeks 3-6)
-
-- Core functionality implementation
-- Database and authentication
-- Testing and optimization
-
-### Phase 3: Deployment Implementation (Weeks 7-10)
-
-- Deploy to each platform
-- Configure CI/CD pipelines
-- Document each process
-
-### Phase 4: Testing & Analysis (Weeks 11-13)
-
-- Performance benchmarking
-- Cost analysis
-- Data collection
-
-### Phase 5: Writing & Finalization (Weeks 14-16)
-
-- Write thesis document
-- Create visualizations
-- Review and revisions
+- Phase 1: Research & Planning
+- Phase 2: Application Development
+- Phase 3: Deployment Implementation
+- Phase 4: Testing & Analysis
+- Phase 5: Writing & Finalization
 
 ---
 
 ## 9. Resources & References
 
-### Documentation
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Vercel Documentation](https://vercel.com/docs)
-- [AWS Documentation](https://docs.aws.amazon.com/)
-- [Docker Documentation](https://docs.docker.com/)
-- [Drizzle ORM Documentation](https://orm.drizzle.team/)
-- [Auth.js Documentation](https://authjs.dev/)
-- [Neon Documentation](https://neon.tech/docs)
-
-### Tools
-
-- VS Code
-- Git/GitHub
-- Postman/Insomnia
-- Lighthouse CI
-- Drizzle Studio
-
-### Academic Resources
-
-- IEEE, ACM Digital Library
-- Research papers on web performance
-- Cloud computing comparative studies
+- Next.js, Vercel, AWS, Docker, Drizzle, Auth.js, Neon docs
+- Tools: VS Code, GitHub, Postman, Lighthouse CI, Drizzle Studio
+- Academic: IEEE, ACM, web/cloud research
 
 ---
 
 ## 10. Notes & Ideas
 
-- Consider adding real-time features (WebSockets) to test serverless limitations
-- Include environment variables management comparison
-- Document database connection handling differences
-- Consider multi-region deployment testing
-- Same Neon database connection works across all deployment platforms (fair comparison)
+- All region names/codes now match geodata (no hover card bugs)
+- Admin UI for region data
+- R2 for image storage
+- Multi-platform DB connection (Neon)
+- Consider real-time features for future work
 
 ---
 
-_Last Updated: November 29, 2025_
+_Last Updated: January 12, 2026_
