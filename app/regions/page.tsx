@@ -222,42 +222,44 @@ export default function RegionsListPage() {
               : region.image || "/images/mkd.png";
             
             return (
-              <Card
+              <a
                 key={region.id}
-                className="group cursor-pointer transition-all hover:shadow-lg"
-                onClick={() => router.push(`/regions/${region.code}`)}
+                href={`/regions/${region.code}`}
+                className="block"
               >
-                <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-muted">
-                  <Image
-                    src={firstImage}
-                    alt={region.name}
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                </div>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-xl">{region.name}</CardTitle>
-                    <Badge variant="secondary" className="shrink-0">
-                      {region.code}
-                    </Badge>
+                <Card className="group cursor-pointer transition-all hover:shadow-lg">
+                  <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-muted">
+                    <Image
+                      src={firstImage}
+                      alt={region.name}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
                   </div>
-                  {region.population && (
-                    <CardDescription className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      Pop: {region.population.toLocaleString()}
-                    </CardDescription>
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-xl">{region.name}</CardTitle>
+                      <Badge variant="secondary" className="shrink-0">
+                        {region.code}
+                      </Badge>
+                    </div>
+                    {region.population && (
+                      <CardDescription className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        Pop: {region.population.toLocaleString()}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  {region.description && (
+                    <CardContent>
+                      <p className="line-clamp-2 text-sm text-muted-foreground">
+                        {region.description}
+                      </p>
+                    </CardContent>
                   )}
-                </CardHeader>
-                {region.description && (
-                  <CardContent>
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {region.description}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
+                </Card>
+              </a>
             );
           })}
         </div>
