@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: macedonia-regions
+data:
+  NODE_ENV: "production"
+  NEXTAUTH_URL: "https://your-domain.com"  # Replace with your actual domain
+  R2_ENDPOINT: "https://your-account-id.r2.cloudflarestorage.com"
+  R2_BUCKET_NAME: "your-bucket-name"
+  R2_PUBLIC_URL: "https://your-bucket.r2.dev"
