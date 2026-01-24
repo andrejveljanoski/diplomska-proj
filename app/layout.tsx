@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Macedonia Scratch Map",
   description: "Track and visualize regions in Macedonia you have visited",
+  icons: {
+    icon: "/images/favicon.png",
+  },
 };
 
 export default function RootLayout({
