@@ -147,15 +147,22 @@ export default function Home() {
         {/* Action Buttons */}
         <Card className="w-full">
           <CardContent className="flex justify-center gap-4 p-4">
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={
-                saveVisitsMutation.isPending || !session?.user || !isDirty
-              }
-            >
-              {saveVisitsMutation.isPending ? "Saving..." : "Save Progress"}
-            </Button>
+            {!session?.user ? (
+              <Button
+                size="sm"
+                onClick={() => window.location.href = "/login"}
+              >
+                Login to Save Progress
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saveVisitsMutation.isPending || !isDirty}
+              >
+                {saveVisitsMutation.isPending ? "Saving..." : "Save Progress"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </section>
