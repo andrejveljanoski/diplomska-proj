@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -6,10 +8,16 @@ export async function GET() {
       hasDatabaseUrl: !!process.env.DATABASE_URL,
       hasNextAuthUrl: !!process.env.NEXTAUTH_URL,
       hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
+      hasAuthSecret: !!process.env.AUTH_SECRET,
       hasAuthTrustHost: !!process.env.AUTH_TRUST_HOST,
       hasR2Endpoint: !!process.env.R2_ENDPOINT,
       nextAuthUrl: process.env.NEXTAUTH_URL || 'NOT_SET',
+      authSecret: process.env.AUTH_SECRET ? 'SET (hidden)' : 'NOT_SET',
+      nextAuthSecret: process.env.NEXTAUTH_SECRET ? 'SET (hidden)' : 'NOT_SET',
       nodeEnv: process.env.NODE_ENV || 'NOT_SET',
+      allEnvKeys: Object.keys(process.env).filter(k => 
+        k.includes('AUTH') || k.includes('DATABASE') || k.includes('R2')
+      ),
     };
 
     // Test database connection
