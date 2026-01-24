@@ -5,7 +5,7 @@ metadata:
   namespace: macedonia-regions
 data:
   NODE_ENV: "production"
-  NEXTAUTH_URL: "http://164.92.240.237"
+  NEXTAUTH_URL: "http://129.212.195.70"
   AUTH_TRUST_HOST: "true"
   R2_ENDPOINT: "https://a223e53d31cc34c5968ee9c0a674903a.r2.cloudflarestorage.com"
   R2_BUCKET_NAME: "macedonia-regions"
