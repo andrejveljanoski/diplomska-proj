@@ -5,8 +5,12 @@ frontend:
       commands:
         - npm install -g pnpm
         - pnpm install
+        - echo "Capturing environment variables for runtime..."
+        - node scripts/capture-env.js
     build:
       commands:
+        - echo "Verifying captured environment variables..."
+        - test -f env-runtime.js && echo "✓ env-runtime.js exists" || echo "✗ env-runtime.js missing"
         - env | grep -E "DATABASE_URL|NEXTAUTH|R2_" || true
         - pnpm run build
   artifacts:

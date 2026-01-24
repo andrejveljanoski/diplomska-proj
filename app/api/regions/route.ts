@@ -1,5 +1,3 @@
-export const runtime = "nodejs";
-
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { regions } from '@/lib/db/schema';
