@@ -45,32 +45,24 @@ function captureEnvironmentVariables() {
     }
   });
 
-  // Generate JavaScript module that sets environment variables
-  const jsContent = `/**
- * Runtime environment variables
- * Auto-generated during build by scripts/capture-env.js
- * DO NOT EDIT MANUALLY
- */
-
-// Inject environment variables into process.env at runtime
-const runtimeEnv = ${JSON.stringify(envVars, null, 2)};
-
-Object.keys(runtimeEnv).forEach((key) => {
-  if (!process.env[key]) {
-    process.env[key] = runtimeEnv[key];
-  }
-});
-
-console.log('✅ Runtime environment variables loaded:', Object.keys(runtimeEnv).length);
-
-module.exports = runtimeEnv;
-`;
-
-  // Write to env-runtime.js file
-  const outputPath = path.join(process.cwd(), 'env-runtime.js');
-  fs.writeFileSync(outputPath, jsContent, 'utf-8');
+  // Generate .env.production file that Next.js will automatically load
+  const envLines = Object.entries(envVars).map(([key, value]) => {
+    // Escape special characters in values
+    const escapedValue = value.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+    return `${key}="${escapedValue}"`;
+  });
   
-  console.log(`\n✅ Generated runtime env module with ${capturedCount} variables`);
+  const envContent = `# Runtime environment variables
+# Auto-generated during build by scripts/capture-env.js
+# DO NOT EDIT MANUALLY
+
+${envLines.join('\n')}\n`;
+
+  // Write to .env.production file
+  const outputPath = path.join(process.cwd(), '.env.production');
+  fs.writeFileSync(outputPath, envContent, 'utf-8');
+  
+  console.log(`\n✅ Generated .env.production with ${capturedCount} variables`);
   console.log(`📄 Location: ${outputPath}`);
   console.log(`📄 File size: ${fs.statSync(outputPath).size} bytes`);
   
@@ -86,7 +78,7 @@ module.exports = runtimeEnv;
   
   // Verify file was created
   if (!fs.existsSync(outputPath)) {
-    console.error('❌ Failed to create env-runtime.js file!');
+    console.error('❌ Failed to create .env.production file!');
     process.exit(1);
   }
 }

@@ -15,12 +15,12 @@ frontend:
     build:
       commands:
         - echo "Verifying captured environment variables..."
-        - test -f env-runtime.js && echo "✓ env-runtime.js exists" || echo "✗ env-runtime.js missing"
+        - test -f .env.production && echo "✓ .env.production exists" || echo "✗ .env.production missing"
         - env | grep -E "DATABASE_URL|NEXTAUTH|R2_" || true
         - pnpm run build
-        - echo "Copying env-runtime.js to standalone output..."
-        - cp env-runtime.js .next/standalone/env-runtime.js
-        - ls -la .next/standalone/env-runtime.js
+        - echo "Copying .env.production to standalone output..."
+        - cp .env.production .next/standalone/.env.production
+        - ls -la .next/standalone/.env.production
   artifacts:
     baseDirectory: .next
     files:
