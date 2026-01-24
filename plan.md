@@ -149,11 +149,46 @@ A web application where users can track and visualize regions in Macedonia they 
 
 ## 4. Deployment Strategies
 
-- Vercel (PaaS, edge/serverless)
-- AWS (Amplify, EC2, ECS/Fargate, Lambda@Edge)
-- Docker/Self-hosted (VPS, Compose)
-- Netlify (static export, edge/serverless)
-- Others: Railway, Render, Fly.io (brief)
+### 4.1 Completed Deployments
+
+#### ✅ Vercel (PaaS - Serverless/Edge)
+- **Status:** Deployed and running
+- **URL:** Production deployment on Vercel
+- **Features:** Edge runtime, automatic CDN, instant rollbacks
+- **Cost:** Free tier (Hobby plan)
+- **Deployment time:** ~2 minutes
+
+#### ✅ Docker/Self-Hosted - DigitalOcean VPS
+- **Status:** Deployed and running
+- **URL:** http://164.92.240.237
+- **Setup:** Docker Compose on Ubuntu 24.04 droplet
+- **Specs:** 2GB RAM, 2 vCPUs, 50GB SSD
+- **Features:** Nginx reverse proxy, auto-restart on reboot
+- **Cost:** $12/month
+- **Deployment time:** ~60 minutes (initial setup)
+- **Image size:** 309MB (74.6MB compressed)
+
+#### ✅ Kubernetes - DigitalOcean Managed K8s (DOKS)
+- **Status:** Deployed and running
+- **URL:** http://129.212.195.70
+- **Setup:** 2-node cluster with LoadBalancer
+- **Specs:** 2 nodes × (2GB RAM, 1 vCPU)
+- **Features:** Auto-scaling (HPA), rolling updates, health checks
+- **Registry:** DigitalOcean Container Registry
+- **Cost:** $36/month (2 × $18/month nodes)
+- **Deployment time:** ~30 minutes (after Docker image ready)
+
+### 4.2 Planned Deployments
+
+#### 🔄 AWS Amplify (PaaS - Serverless)
+- **Next deployment:** In progress
+- **Features:** Git-based deployment, auto-scaling, CDN
+- **Expected cost:** ~$15-30/month
+
+#### 📋 Future Considerations
+- Netlify (static export comparison)
+- AWS ECS Fargate (serverless containers)
+- Railway/Render (alternative PaaS platforms)
 
 ---
 
@@ -188,11 +223,45 @@ A web application where users can track and visualize regions in Macedonia they 
 
 ## 8. Timeline
 
-- Phase 1: Research & Planning
-- Phase 2: Application Development
-- Phase 3: Deployment Implementation
-- Phase 4: Testing & Analysis
-- Phase 5: Writing & Finalization
+### Completed Phases
+
+- ✅ **Phase 1: Research & Planning** (Weeks 1-2)
+  - Application concept defined
+  - Technology stack selected
+  - Deployment platforms identified
+
+- ✅ **Phase 2: Application Development** (Weeks 3-6)
+  - Next.js app with all core features
+  - Database schema and ORM setup
+  - Authentication system
+  - Admin UI and region management
+  - Image upload (Cloudflare R2)
+  - All 80 regions mapped and functional
+
+- ✅ **Phase 3: Deployment Implementation** (Weeks 7-8)
+  - Vercel deployment (serverless baseline)
+  - Docker containerization and optimization
+  - DigitalOcean VPS deployment with Nginx
+  - DigitalOcean Kubernetes cluster deployment
+  - Container registry setup
+
+### In Progress
+
+- 🔄 **Phase 3 (Continued):** AWS Amplify deployment
+
+### Remaining Phases
+
+- 📋 **Phase 4: Testing & Analysis** (Weeks 9-10)
+  - Performance benchmarking (Lighthouse, load tests)
+  - Cost analysis and projections
+  - Scalability testing
+  - Developer experience comparison
+
+- 📋 **Phase 5: Writing & Finalization** (Weeks 11-14)
+  - Comparative analysis chapter
+  - Results documentation
+  - Recommendations and conclusions
+  - Thesis review and defense preparation
 
 ---
 
@@ -214,4 +283,4 @@ A web application where users can track and visualize regions in Macedonia they 
 
 ---
 
-_Last Updated: January 12, 2026_
+_Last Updated: January 23, 2026_
