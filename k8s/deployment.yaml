@@ -37,6 +37,11 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: nextauth-secret
+        - name: AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: auth-secret
         - name: R2_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
