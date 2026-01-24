@@ -30,6 +30,8 @@ function captureEnvironmentVariables() {
   let missingVars = [];
 
   console.log('🔍 Capturing environment variables for runtime injection...');
+  console.log('Current working directory:', process.cwd());
+  console.log('Total env vars available:', Object.keys(process.env).length);
   
   ENV_VARS_TO_CAPTURE.forEach((varName) => {
     const value = process.env[varName];
@@ -70,10 +72,17 @@ module.exports = runtimeEnv;
   
   console.log(`\n✅ Generated runtime env module with ${capturedCount} variables`);
   console.log(`📄 Location: ${outputPath}`);
+  console.log(`📄 File size: ${fs.statSync(outputPath).size} bytes`);
   
   if (missingVars.length > 0) {
     console.warn(`⚠️  Warning: ${missingVars.length} variables were missing: ${missingVars.join(', ')}`);
   }
+  
+  // Log first few lines of generated file for verification
+  const fileContent = fs.readFileSync(outputPath, 'utf-8');
+  const lines = fileContent.split('\n').slice(0, 15);
+  console.log('\n📝 Generated file preview:');
+  lines.forEach(line => console.log('  ' + line));
   
   // Verify file was created
   if (!fs.existsSync(outputPath)) {

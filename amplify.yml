@@ -5,6 +5,11 @@ frontend:
       commands:
         - npm install -g pnpm
         - pnpm install
+        - echo "=== Environment Variables Check ==="
+        - echo "DATABASE_URL=${DATABASE_URL:0:20}..."
+        - echo "NEXTAUTH_URL=$NEXTAUTH_URL"
+        - echo "R2_ENDPOINT=$R2_ENDPOINT"
+        - env | grep -i "DATABASE\|AUTH\|R2" | head -20 || echo "No matching env vars found"
         - echo "Capturing environment variables for runtime..."
         - node scripts/capture-env.js
     build:
@@ -13,6 +18,9 @@ frontend:
         - test -f env-runtime.js && echo "✓ env-runtime.js exists" || echo "✗ env-runtime.js missing"
         - env | grep -E "DATABASE_URL|NEXTAUTH|R2_" || true
         - pnpm run build
+        - echo "Copying env-runtime.js to standalone output..."
+        - cp env-runtime.js .next/standalone/env-runtime.js
+        - ls -la .next/standalone/env-runtime.js
   artifacts:
     baseDirectory: .next
     files:
