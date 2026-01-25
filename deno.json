@@ -1,5 +1,7 @@
 {
   "tasks": {
-    "build": "NODE_OPTIONS=--max-old-space-size=2560 next build"
-  }
+    "build": "NODE_OPTIONS='--max-old-space-size=2800 --max-semi-space-size=128' next build",
+    "start": "next start"
+  },
+  "nodeModulesDir": true
 }
