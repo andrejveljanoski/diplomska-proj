@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "build": "bun next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=2900' pnpm next build",
     "start": "next start"
   },
   "nodeModulesDir": true
