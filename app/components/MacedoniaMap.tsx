@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5map from "@amcharts/amcharts5/map";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5geodata_mkHigh from "@amcharts/amcharts5-geodata/northMacedoniaHigh";
+// Use local geodata to avoid installing the entire 335MB package
+import am5geodata_mkHigh from "@/lib/geodata/northMacedoniaHigh";
 import RegionCard from "@/components/ui/region-card";
 
 interface MacedoniaMapProps {

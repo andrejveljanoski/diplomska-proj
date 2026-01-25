@@ -11,9 +11,6 @@ importers:
       '@amcharts/amcharts5':
         specifier: ^5.14.4
         version: 5.15.0
-      '@amcharts/amcharts5-geodata':
-        specifier: ^5.1.5
-        version: 5.1.5
       '@auth/drizzle-adapter':
         specifier: ^1.11.1
         version: 1.11.1
@@ -153,9 +150,6 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
-
-  '@amcharts/amcharts5-geodata@5.1.5':
-    resolution: {integrity: sha512-LiH726cCNHBSBc5fcT1fjHEq28zwfYD5F6B5KKZflvVTUu5oaRh/c77GDTZgU4MYEo0xspSWhmXFy39BR7mpXw==}
 
   '@amcharts/amcharts5@5.15.0':
     resolution: {integrity: sha512-NHFhAQjFmWMZKXcgPKJr6/ebcZGALyyWUWhLxh7SobuxBKAd0wTF2eAb7qUuC1UpjicoGanvEy+i3mFn2dI0ow==}
@@ -4135,10 +4129,6 @@ packages:
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
-
-  '@amcharts/amcharts5-geodata@5.1.5':
-    dependencies:
-      '@types/geojson': 7946.0.16
 
   '@amcharts/amcharts5@5.15.0':
     dependencies:

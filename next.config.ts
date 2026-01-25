@@ -8,29 +8,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', '@amcharts/amcharts5', 'lucide-react'],
-    // Reduce memory during build
-    webpackMemoryOptimizations: true,
   },
-  // Optimize chunk splitting
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            amcharts: {
-              test: /[\\/]node_modules[\\/]@amcharts[\\/]/,
-              name: 'amcharts',
-              priority: 10,
-            },
-            default: false,
-          },
-        },
-      };
-    }
-    return config;
-  },
+  // Empty turbopack config to silence the warning (Next.js 16 uses Turbopack by default)
+  turbopack: {},
   images: {
     remotePatterns: [
       {
