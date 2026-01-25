@@ -82,16 +82,17 @@ A web application where users can track and visualize regions in Macedonia they 
 
 | Component          | Technology               | Reason                                        |
 | ------------------ | ------------------------ | --------------------------------------------- |
-| **Framework**      | Next.js 14+ (App Router) | SSR, SSG, Server Components                   |
-| **Language**       | TypeScript               | Type safety                                   |
+| **Framework**      | Next.js 16.0.10 (App Router) | SSR, SSG, Server Components, Turbopack     |
+| **Language**       | TypeScript 5             | Type safety                                   |
 | **Styling**        | Tailwind CSS v4          | Utility-first, fast                           |
-| **UI Components**  | shadcn/ui                | Pre-built, customizable                       |
-| **Map Library**    | amCharts 5               | Interactive SVG maps, Macedonia geodata        |
+| **UI Components**  | shadcn/ui (Radix UI)     | Pre-built, accessible components              |
+| **Map Library**    | amCharts 5               | Interactive SVG maps, Macedonia geodata       |
 | **Database**       | Neon (PostgreSQL)        | Serverless, works on all platforms            |
 | **ORM**            | Drizzle ORM              | Type-safe, lightweight, SQL-like              |
-| **Authentication** | Auth.js (NextAuth v5)    | Platform-agnostic, JWT sessions               |
-| **Image Storage**  | Cloudflare R2            | Object storage for region images              |
-| **Animations**     | Framer Motion            | Smooth UI transitions                         |
+| **Authentication** | Auth.js (NextAuth v5 beta) | Platform-agnostic, JWT sessions             |
+| **Image Storage**  | Cloudflare R2 (S3-compatible) | Object storage for region images         |
+| **Animations**     | Motion (CSS fallback)    | Smooth UI transitions                         |
+| **Analytics**      | Vercel Speed Insights    | Performance monitoring                        |
 
 ### 3.3 Database Schema (Current)
 
@@ -115,19 +116,23 @@ A web application where users can track and visualize regions in Macedonia they 
 ### 3.4 Application Features (Current)
 
 - [x] Interactive Macedonia map (amCharts 5)
-- [x] User authentication (Auth.js)
+- [x] User authentication (Auth.js/NextAuth v5)
 - [x] User dashboard with travel stats
 - [x] Region details pages (`/regions/[code]`)
 - [x] Admin region editor (UI)
-- [x] Image upload for regions (R2)
+- [x] Image upload for regions (Cloudflare R2 + AWS SDK)
 - [x] Public user profiles
 - [x] CRUD for visits (API routes)
 - [x] Mobile responsive UI
 - [x] Leaderboard and statistics
-- [x] Floating navbar, modern UI
+- [x] Floating navbar with scroll behavior (CSS-based)
 - [x] All region names and codes normalized to geodata
 - [x] Database and API use region codes directly
 - [x] All region hover cards work (including Čučer Sandevo)
+- [x] Macedonia logo favicon
+- [x] Vercel Speed Insights integration
+- [x] Login button on homepage when not authenticated
+- [x] Save progress requires authentication
 
 ### 3.5 Development Milestones (Updated)
 
@@ -180,8 +185,20 @@ A web application where users can track and visualize regions in Macedonia they 
 
 ### 4.2 Planned Deployments
 
+#### ❌ Deno Deploy (Edge Platform) - ABANDONED
+- **Status:** Attempted but failed
+- **Issue:** Free tier (3GB RAM) insufficient for npm install
+- **Details:** 680+ packages with large dependencies (@amcharts, @aws-sdk, Next.js)
+- **Failure point:** Exit code 137 (OOM) at ~40% package installation
+- **Reason for abandonment:** Platform constraints incompatible with full-stack Next.js apps
+- **Notes:** 
+  - Attempted optimizations: removed AWS SDK (-98 packages), removed Motion library
+  - Still failed at ~227/582 packages during install
+  - Not a memory leak, just heavy dependencies + limited build environment
+  - npm authentication errors also encountered
+
 #### 🔄 AWS Amplify (PaaS - Serverless)
-- **Next deployment:** In progress
+- **Next deployment:** Planned
 - **Features:** Git-based deployment, auto-scaling, CDN
 - **Expected cost:** ~$15-30/month
 
@@ -189,6 +206,7 @@ A web application where users can track and visualize regions in Macedonia they 
 - Netlify (static export comparison)
 - AWS ECS Fargate (serverless containers)
 - Railway/Render (alternative PaaS platforms)
+- Note: Deno Deploy unsuitable for complex Next.js apps
 
 ---
 
@@ -275,12 +293,31 @@ A web application where users can track and visualize regions in Macedonia they 
 
 ## 10. Notes & Ideas
 
+### Recent Updates (January 2026)
 - All region names/codes now match geodata (no hover card bugs)
-- Admin UI for region data
-- R2 for image storage
-- Multi-platform DB connection (Neon)
-- Consider real-time features for future work
+- Admin UI for region data working
+- R2 for image storage via AWS SDK S3-compatible API
+- Multi-platform DB connection (Neon) works across all deployments
+- Vercel Speed Insights integrated for performance monitoring
+- Macedonia logo added as favicon
+- Next.js 16 with Turbopack (default) for faster builds
+- Motion library replaced with CSS transitions for navbar
+- Deno Deploy attempted but abandoned due to platform limitations
+- Package count: ~680 dependencies (typical for full-stack Next.js)
+
+### Deployment Lessons Learned
+- **Vercel**: Best DX, instant deploys, optimal for Next.js
+- **Docker/VPS**: Full control, predictable costs, requires maintenance
+- **Kubernetes**: Production-grade, overkill for small apps, higher costs
+- **Deno Deploy**: Great for lightweight apps, incompatible with heavy dependencies
+
+### Future Work Considerations
+- Consider real-time features (WebSockets/Server-Sent Events)
+- Progressive Web App (PWA) capabilities
+- Offline support for visited regions
+- Social features (share maps, challenges)
+- Performance: Image optimization, lazy loading improvements
 
 ---
 
-_Last Updated: January 23, 2026_
+_Last Updated: January 25, 2026_
