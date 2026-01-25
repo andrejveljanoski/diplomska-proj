@@ -1,29 +1,52 @@
-// AWS SDK temporarily removed to reduce package size for Deno Deploy
-// To re-enable R2 uploads, run: pnpm add @aws-sdk/client-s3
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
-export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || '';
-export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || '';
+// Initialize R2 client
+export const r2Client = new S3Client({
+  region: "auto",
+  endpoint: process.env.R2_ENDPOINT!,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME!;
+export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!;
 
 /**
- * Upload an image to R2 (TEMPORARILY DISABLED)
+ * Upload an image to R2
  * @param file - The file to upload
  * @param key - The key (path) for the file in R2
  * @returns The public URL of the uploaded file
  */
 export async function uploadImageToR2(
-  _file: Buffer,
-  _key: string,
-  _contentType: string
+  file: Buffer,
+  key: string,
+  contentType: string
 ): Promise<string> {
-  throw new Error('R2 uploads temporarily disabled. AWS SDK removed to reduce package size.');
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    Body: file,
+    ContentType: contentType,
+  });
+
+  await r2Client.send(command);
+  
+  return `${R2_PUBLIC_URL}/${key}`;
 }
 
 /**
- * Delete an image from R2 (TEMPORARILY DISABLED)
+ * Delete an image from R2
  * @param key - The key (path) of the file to delete
  */
-export async function deleteImageFromR2(_key: string): Promise<void> {
-  throw new Error('R2 deletes temporarily disabled. AWS SDK removed to reduce package size.');
+export async function deleteImageFromR2(key: string): Promise<void> {
+  const command = new DeleteObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+  });
+
+  await r2Client.send(command);
 }
 
 /**
