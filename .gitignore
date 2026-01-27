@@ -34,6 +34,15 @@ yarn-error.log*
 .env*
 !.env.example
 
+# ssh keys and certificates
+*.pem
+*.key
+*.pub
+*.crt
+*.cer
+*.p12
+*.pfx
+
 # vercel
 .vercel
 

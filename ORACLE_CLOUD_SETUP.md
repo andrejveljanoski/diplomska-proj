@@ -53,6 +53,7 @@ Complete guide to deploy Macedonia Regions on Oracle Cloud's free tier (forever 
 **Name:** `macedonia-regions-app`
 
 **Placement:**
+
 - Availability Domain: Any (usually AD-1)
 - Fault domain: Leave default
 
@@ -71,6 +72,7 @@ Complete guide to deploy Macedonia Regions on Oracle Cloud's free tier (forever 
    - Click **"Select Shape"**
 
 **Networking:**
+
 - VCN: Use default (auto-created)
 - Subnet: Public subnet (default)
 - **Public IPv4 address:** ✅ Assign a public IPv4 address
@@ -79,11 +81,13 @@ Complete guide to deploy Macedonia Regions on Oracle Cloud's free tier (forever 
 **Add SSH Keys:**
 
 **Option A: Auto-generate (Easiest)**
+
 - Select **"Generate a key pair for me"**
 - Click **"Save Private Key"** (save as `oracle-vm-key.key`)
 - Click **"Save Public Key"** (optional backup)
 
 **Option B: Use your own key**
+
 ```bash
 # On your local machine (Git Bash/PowerShell)
 ssh-keygen -t rsa -b 4096 -f oracle-vm-key
@@ -91,6 +95,7 @@ ssh-keygen -t rsa -b 4096 -f oracle-vm-key
 ```
 
 **Boot Volume:**
+
 - Size: **50 GB** (default, plenty for Docker)
 
 ### Step 3: Create Instance
@@ -114,18 +119,21 @@ Oracle Cloud has TWO firewalls you need to configure:
 **Add these rules:**
 
 **Rule 1: HTTP (Port 80)**
+
 - Source CIDR: `0.0.0.0/0`
 - IP Protocol: `TCP`
 - Destination Port Range: `80`
 - Description: `HTTP traffic`
 
 **Rule 2: HTTPS (Port 443)**
+
 - Source CIDR: `0.0.0.0/0`
 - IP Protocol: `TCP`
 - Destination Port Range: `443`
 - Description: `HTTPS traffic`
 
 **Rule 3: Custom (Port 3000) - Optional for testing**
+
 - Source CIDR: `0.0.0.0/0`
 - IP Protocol: `TCP`
 - Destination Port Range: `3000`
@@ -142,6 +150,7 @@ We'll configure this after connecting to the server.
 ### Get Connection Details
 
 From Oracle Cloud Console:
+
 - **Public IP:** Copy from instance details
 - **Username:** `ubuntu` (for Ubuntu images)
 - **SSH Key:** The private key you downloaded
@@ -149,6 +158,7 @@ From Oracle Cloud Console:
 ### Connect via SSH
 
 **Windows (PowerShell):**
+
 ```powershell
 # Set key permissions (only needed once)
 icacls oracle-vm-key.key /inheritance:r
@@ -159,6 +169,7 @@ ssh -i oracle-vm-key.key ubuntu@YOUR_PUBLIC_IP
 ```
 
 **Windows (Git Bash) / Mac / Linux:**
+
 ```bash
 # Set key permissions (only needed once)
 chmod 400 oracle-vm-key.key
@@ -209,6 +220,7 @@ exit
 ```
 
 **Reconnect:**
+
 ```bash
 ssh -i oracle-vm-key.key ubuntu@YOUR_PUBLIC_IP
 ```
@@ -235,17 +247,18 @@ nano .env
 ```
 
 Paste your environment variables:
+
 ```env
 NODE_ENV=production
-DATABASE_URL=postgresql://neondb_owner:npg_fEQx79NLzopm@ep-delicate-fog-agkxpuhp-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=postgresql://YOUR_DB_USER:YOUR_DB_PASSWORD@YOUR_DB_HOST/YOUR_DB_NAME?sslmode=require
 NEXTAUTH_URL=http://YOUR_PUBLIC_IP:3000
-NEXTAUTH_SECRET=k7Xp2mN9qR4sT8vB3wY6zA1cD5eF0gH2jK7mP9rS4tU=
+NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET_HERE
 AUTH_TRUST_HOST=true
-R2_ENDPOINT=https://a223e53d31cc34c5968ee9c0a674903a.r2.cloudflarestorage.com
-R2_ACCESS_KEY_ID=63bb03608e39a2c087caa9c4331e9d0c
-R2_SECRET_ACCESS_KEY=a97c7bea81e2c7b5e6eb59596e49d354cff215648568a2b74b05dccdb503363b
-R2_BUCKET_NAME=macedonia-regions
-R2_PUBLIC_URL=https://pub-b9d54b7cd30042a0aab7e0c72155183d.r2.dev
+R2_ENDPOINT=https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=YOUR_R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY=YOUR_R2_SECRET_ACCESS_KEY
+R2_BUCKET_NAME=YOUR_BUCKET_NAME
+R2_PUBLIC_URL=https://YOUR_R2_PUBLIC_URL.r2.dev
 ```
 
 Save: `Ctrl+O`, `Enter`, `Ctrl+X`
@@ -262,6 +275,7 @@ docker compose logs -f
 ### Option 2: Upload Files Directly (Alternative)
 
 **From your local machine (PowerShell/Git Bash):**
+
 ```bash
 # Navigate to your project
 cd C:\Users\andre\macedonia-regions\diplomska-proj
@@ -291,6 +305,7 @@ sudo nano /etc/nginx/sites-available/macedonia-regions
 ```
 
 Paste this configuration:
+
 ```nginx
 server {
     listen 80;
@@ -306,7 +321,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # Increase timeout for large uploads
         proxy_read_timeout 300;
         proxy_connect_timeout 300;
@@ -316,6 +331,7 @@ server {
 ```
 
 Save and enable:
+
 ```bash
 # Enable site
 sudo ln -s /etc/nginx/sites-available/macedonia-regions /etc/nginx/sites-enabled/
@@ -340,6 +356,7 @@ sudo systemctl status nginx
 ### Get a Free Domain
 
 **Free Options:**
+
 1. **Freenom** (discontinued for new registrations)
 2. **DuckDNS** (free subdomain): `yourname.duckdns.org`
 3. **Cloudflare** (cheap .xyz domains): ~$1/year
@@ -350,6 +367,7 @@ sudo systemctl status nginx
 If you have a domain (e.g., `macedonia-regions.com`):
 
 **On your DNS provider (Cloudflare, Namecheap, etc.):**
+
 1. Add **A Record:**
    - Name: `@` (or leave blank)
    - Value: `YOUR_ORACLE_PUBLIC_IP`
@@ -368,11 +386,13 @@ sudo nano /etc/nginx/sites-available/macedonia-regions
 ```
 
 Change `server_name`:
+
 ```nginx
 server_name macedonia-regions.com www.macedonia-regions.com;
 ```
 
 Restart Nginx:
+
 ```bash
 sudo nginx -t
 sudo systemctl restart nginx
@@ -398,11 +418,13 @@ sudo certbot --nginx -d macedonia-regions.com -d www.macedonia-regions.com
 **Auto-renewal is configured automatically!**
 
 Test renewal:
+
 ```bash
 sudo certbot renew --dry-run
 ```
 
 **Update .env NEXTAUTH_URL:**
+
 ```bash
 nano ~/macedonia-regions/.env
 # Change: NEXTAUTH_URL=https://macedonia-regions.com
@@ -421,6 +443,7 @@ sudo nano /etc/systemd/system/macedonia-regions.service
 ```
 
 Paste:
+
 ```ini
 [Unit]
 Description=Macedonia Regions Docker Compose
@@ -441,6 +464,7 @@ WantedBy=multi-user.target
 ```
 
 Enable:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable macedonia-regions
@@ -453,6 +477,7 @@ sudo systemctl status macedonia-regions
 ## 11. Monitoring & Maintenance
 
 ### View Logs
+
 ```bash
 # Application logs
 cd ~/macedonia-regions
@@ -467,6 +492,7 @@ sudo journalctl -u macedonia-regions -f
 ```
 
 ### Update Application
+
 ```bash
 cd ~/macedonia-regions
 git pull
@@ -475,6 +501,7 @@ docker compose up -d --build
 ```
 
 ### Check Resources
+
 ```bash
 # Disk usage
 df -h
@@ -490,6 +517,7 @@ htop  # Install: sudo apt install htop
 ```
 
 ### Backup Important Data
+
 ```bash
 # Backup .env file
 cp ~/macedonia-regions/.env ~/macedonia-env-backup
@@ -509,12 +537,14 @@ cp ~/macedonia-regions/.env ~/macedonia-env-backup
 3. View **Cost Analysis**
 
 **Free Tier Limits:**
+
 - 2 AMD VMs (1/8 OCPU, 1GB RAM each)
 - OR 1-4 ARM VMs (total: 4 OCPU, 24GB RAM)
 - 200GB Block Storage
 - 10TB outbound transfer/month
 
 **Stay Free:**
+
 - ✅ Use only Ampere A1 (ARM) shapes
 - ✅ Stay within 4 OCPU + 24GB RAM total
 - ✅ Monitor bandwidth (10TB is generous)
@@ -601,6 +631,7 @@ free -h
 ---
 
 **Support:**
+
 - Oracle Cloud Docs: https://docs.oracle.com/
 - Community: https://community.oracle.com/
 - Your thesis advisor 😊
