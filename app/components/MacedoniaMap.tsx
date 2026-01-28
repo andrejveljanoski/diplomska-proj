@@ -277,7 +277,7 @@ export default function MacedoniaMap({
   }, [regions, visitedRegions]);
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 1 }}>
       <div
         ref={chartDivRef}
         className="rounded-lg"
@@ -289,10 +289,11 @@ export default function MacedoniaMap({
 
       {hoveredRegion && (
         <div
-          className="pointer-events-none absolute z-9999"
+          className="pointer-events-none fixed"
           style={{
             left: hoveredRegion.x + 20,
             top: hoveredRegion.y - 100,
+            zIndex: 9999,
           }}
         >
           <RegionCard region={hoveredRegion} />
