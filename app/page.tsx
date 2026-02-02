@@ -98,24 +98,24 @@ export default function Home() {
     <>
       <FloatingNavbar />
 
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6 pt-32">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 pt-20 pb-6 sm:gap-4 sm:px-4 sm:pt-24 md:gap-6 md:px-6 md:pt-32">
         {/* Stats Row */}
         <Card className="w-full">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <article>
-                <h1 className="text-3xl font-bold">Macedonia</h1>
-                <p className="text-sm font-normal text-muted-foreground">
+          <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2 md:p-6 md:pb-2">
+            <CardTitle className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
+              <article className="text-center md:text-left">
+                <h1 className="text-xl font-bold sm:text-2xl md:text-3xl">Macedonia</h1>
+                <p className="text-xs font-normal text-muted-foreground sm:text-sm">
                   Click on a region to mark it as visited
                 </p>
               </article>
-              <aside className="flex items-center gap-4">
-                <figure className="flex flex-col items-end">
-                  <Badge variant="secondary" className="mb-1">
+              <aside className="flex items-center justify-center gap-4 md:justify-end">
+                <figure className="flex flex-col items-center md:items-end">
+                  <Badge variant="secondary" className="mb-1 text-xs sm:text-sm">
                     {visitedCount} / {TOTAL_REGIONS} regions
                   </Badge>
-                  <Progress value={progressPercent} className="h-2 w-32" />
-                  <figcaption className="mt-1 text-xs text-muted-foreground">
+                  <Progress value={progressPercent} className="h-2 w-28 sm:w-32" />
+                  <figcaption className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                     {progressPercent.toFixed(1)}% explored
                   </figcaption>
                 </figure>
@@ -125,9 +125,9 @@ export default function Home() {
         </Card>
 
         {/* Map */}
-        <Card className="w-full">
+        <Card className="w-full overflow-hidden">
           <CardContent className="p-0">
-            <div className="relative">
+            <div className="relative aspect-[4/3] sm:aspect-[16/10] md:aspect-auto">
               <MacedoniaMap
                 visitedRegions={memoizedVisitedRegions}
                 onRegionToggle={handleRegionToggle}
@@ -135,7 +135,7 @@ export default function Home() {
               />
               {isLoadingVisits && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/60">
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground sm:text-base">
                     Loading your progress...
                   </p>
                 </div>

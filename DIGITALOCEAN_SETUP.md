@@ -41,7 +41,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
 **Get $200 credit for 60 days**
 
 1. Go to: https://www.digitalocean.com/
-2. Click **"Sign Up"** 
+2. Click **"Sign Up"**
 3. Sign up with:
    - Email & password, or
    - GitHub account (recommended)
@@ -50,6 +50,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
 6. Automatically get $200 credit for 60 days
 
 **Credit Usage Examples:**
+
 - $200 = 16+ months of $12/month Droplet
 - $200 = 40+ months of $4/month Droplet
 - $200 = ~20 days of $10/day Kubernetes cluster
@@ -66,6 +67,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
 ### Step 2: Choose Configuration
 
 #### **Choose an Image:**
+
 - **Distribution:** Ubuntu
 - **Version:** **Ubuntu 24.04 LTS x64** (recommended)
 - Or: Ubuntu 22.04 LTS x64 (also good)
@@ -75,6 +77,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
 **Recommended for Your App:**
 
 **Basic - Regular (Best Value):**
+
 - **$12/month** ⭐ RECOMMENDED
   - 2 GB RAM / 2 vCPUs
   - 50 GB SSD
@@ -82,6 +85,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
   - Perfect for production
 
 **Alternative (Testing):**
+
 - **$4/month** (cheaper for testing)
   - 512 MB RAM / 1 vCPU
   - 10 GB SSD
@@ -89,6 +93,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
   - Good for initial testing
 
 **For Kubernetes (later):**
+
 - Premium - CPU-Optimized
 - $40/month for 2-node cluster
 - (We'll cover this separately)
@@ -96,6 +101,7 @@ Complete step-by-step guide to deploy Macedonia Regions on DigitalOcean.
 #### **Choose a Datacenter Region:**
 
 Select closest to you or your users:
+
 - **Amsterdam** (good for Europe)
 - **Frankfurt** (good for Europe)
 - **London** (good for Europe/UK)
@@ -106,6 +112,7 @@ Select closest to you or your users:
 **Option 1: SSH Key (Recommended - More Secure)**
 
 **On your local machine (PowerShell):**
+
 ```powershell
 # Generate SSH key
 ssh-keygen -t ed25519 -C "your-email@example.com"
@@ -118,6 +125,7 @@ cat C:\Users\andre\.ssh\id_ed25519.pub
 ```
 
 **On DigitalOcean:**
+
 - Click **"New SSH Key"**
 - Paste the public key
 - Name: "My-Laptop" or "Windows-PC"
@@ -125,6 +133,7 @@ cat C:\Users\andre\.ssh\id_ed25519.pub
 - ✅ Select this key for your Droplet
 
 **Option 2: Password (Easier but Less Secure)**
+
 - Root password will be emailed to you
 - You'll be forced to change it on first login
 
@@ -153,6 +162,7 @@ cat C:\Users\andre\.ssh\id_ed25519.pub
 ### Get Connection Details
 
 From DigitalOcean dashboard:
+
 - **IP Address:** Shows on Droplet card
 - **Username:** `root` (default for Ubuntu)
 - **SSH Key:** The one you created earlier
@@ -160,6 +170,7 @@ From DigitalOcean dashboard:
 ### Connect via SSH
 
 **Windows PowerShell:**
+
 ```powershell
 # Connect with SSH key (if you used Option 1)
 ssh root@YOUR_DROPLET_IP
@@ -169,13 +180,16 @@ ssh -i C:\Users\andre\.ssh\id_ed25519 root@YOUR_DROPLET_IP
 ```
 
 **First time connecting:**
+
 - Type `yes` when asked about fingerprint
 
 **If using password (Option 2):**
+
 - Check your email for temporary password
 - SSH will ask you to change it on first login
 
 **Troubleshooting connection issues:**
+
 ```powershell
 # If "permission denied", check key permissions
 icacls C:\Users\andre\.ssh\id_ed25519 /inheritance:r
@@ -223,6 +237,7 @@ chmod 600 /home/deployer/.ssh/authorized_keys
 ```
 
 **Now logout and login as deployer:**
+
 ```bash
 exit
 ```
@@ -252,11 +267,13 @@ exit
 ```
 
 **Reconnect:**
+
 ```powershell
 ssh deployer@YOUR_DROPLET_IP
 ```
 
 **Verify installations:**
+
 ```bash
 docker --version
 # Should show: Docker version 25.x.x
@@ -292,6 +309,7 @@ git clone https://YOUR_GITHUB_TOKEN@github.com/YOUR_USERNAME/macedonia-regions.g
 **Don't have a GitHub repo yet?** Let's create one:
 
 **On your local machine:**
+
 ```powershell
 cd C:\Users\andre\macedonia-regions\diplomska-proj
 
@@ -310,6 +328,7 @@ git push -u origin main
 ### Option 2: Upload Files Directly (Alternative)
 
 **On your local machine (PowerShell):**
+
 ```powershell
 # Navigate to project
 cd C:\Users\andre\macedonia-regions\diplomska-proj
@@ -321,6 +340,7 @@ scp -r * deployer@YOUR_DROPLET_IP:~/apps/macedonia-regions/
 ### Create Environment File
 
 **On the Droplet:**
+
 ```bash
 cd ~/apps/macedonia-regions
 
@@ -329,23 +349,24 @@ nano .env
 ```
 
 **Paste your environment variables:**
+
 ```env
 NODE_ENV=production
 
 # Database (Your Neon PostgreSQL)
-DATABASE_URL=postgresql://neondb_owner:npg_fEQx79NLzopm@ep-delicate-fog-agkxpuhp-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=postgresql://YOUR_DB_USER:YOUR_DB_PASSWORD@YOUR_DB_HOST/YOUR_DB_NAME?sslmode=require
 
 # Auth.js
 NEXTAUTH_URL=http://YOUR_DROPLET_IP:3000
-NEXTAUTH_SECRET=k7Xp2mN9qR4sT8vB3wY6zA1cD5eF0gH2jK7mP9rS4tU=
+NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET_HERE
 AUTH_TRUST_HOST=true
 
 # Cloudflare R2
-R2_ENDPOINT=https://a223e53d31cc34c5968ee9c0a674903a.r2.cloudflarestorage.com
-R2_ACCESS_KEY_ID=63bb03608e39a2c087caa9c4331e9d0c
-R2_SECRET_ACCESS_KEY=a97c7bea81e2c7b5e6eb59596e49d354cff215648568a2b74b05dccdb503363b
-R2_BUCKET_NAME=macedonia-regions
-R2_PUBLIC_URL=https://pub-b9d54b7cd30042a0aab7e0c72155183d.r2.dev
+R2_ENDPOINT=https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=YOUR_R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY=YOUR_R2_SECRET_ACCESS_KEY
+R2_BUCKET_NAME=YOUR_BUCKET_NAME
+R2_PUBLIC_URL=https://YOUR_R2_PUBLIC_URL.r2.dev
 ```
 
 **Save:** `Ctrl+O`, Enter, `Ctrl+X`
@@ -368,6 +389,7 @@ docker compose logs -f
 ```
 
 **Test the application:**
+
 ```bash
 # From the server
 curl http://localhost:3000
@@ -393,6 +415,7 @@ sudo nano /etc/nginx/sites-available/macedonia-regions
 ```
 
 **Paste this configuration:**
+
 ```nginx
 server {
     listen 80;
@@ -415,7 +438,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # Timeouts
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
@@ -436,6 +459,7 @@ server {
 **Save:** `Ctrl+O`, Enter, `Ctrl+X`
 
 **Enable the site:**
+
 ```bash
 # Create symbolic link
 sudo ln -s /etc/nginx/sites-available/macedonia-regions /etc/nginx/sites-enabled/
@@ -452,6 +476,7 @@ sudo systemctl status nginx
 ```
 
 **Test:**
+
 ```
 http://YOUR_DROPLET_IP
 ```
@@ -465,11 +490,13 @@ Your app should now work on port 80! 🎉
 ### Get a Domain
 
 **Free Options:**
+
 1. **GitHub Student Pack** - Free `.me` domain for 1 year (Namecheap)
 2. **Freenom** - Free domains (discontinued for new registrations)
 3. **DuckDNS** - Free subdomain: `yourname.duckdns.org`
 
 **Paid Options (Cheap):**
+
 1. **Namecheap** - .com domains ~$9/year
 2. **Cloudflare** - .xyz domains ~$1/year
 3. **Porkbun** - Various TLDs, good prices
@@ -477,6 +504,7 @@ Your app should now work on port 80! 🎉
 ### Example: Using Namecheap (Free with Student Pack)
 
 **On Namecheap:**
+
 1. Get domain from GitHub Student Pack benefits
 2. Go to Domain List → Manage
 3. Advanced DNS
@@ -500,17 +528,20 @@ sudo nano /etc/nginx/sites-available/macedonia-regions
 ```
 
 **Change the `server_name` line:**
+
 ```nginx
 server_name yourdomain.com www.yourdomain.com;
 ```
 
 **Restart Nginx:**
+
 ```bash
 sudo nginx -t
 sudo systemctl restart nginx
 ```
 
 **Test:**
+
 ```
 http://yourdomain.com
 ```
@@ -536,11 +567,13 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
 **Certbot will automatically:**
+
 - ✅ Get SSL certificate
 - ✅ Update Nginx configuration
 - ✅ Setup auto-renewal (runs twice daily)
 
 **Update your .env file:**
+
 ```bash
 cd ~/apps/macedonia-regions
 nano .env
@@ -550,11 +583,13 @@ NEXTAUTH_URL=https://yourdomain.com
 ```
 
 **Restart your app:**
+
 ```bash
 docker compose restart
 ```
 
 **Test:**
+
 ```
 https://yourdomain.com
 ```
@@ -562,6 +597,7 @@ https://yourdomain.com
 You should see the padlock icon! 🔒
 
 **Test auto-renewal:**
+
 ```bash
 sudo certbot renew --dry-run
 ```
@@ -578,6 +614,7 @@ sudo nano /etc/systemd/system/macedonia-regions.service
 ```
 
 **Paste:**
+
 ```ini
 [Unit]
 Description=Macedonia Regions Docker Compose Application
@@ -601,6 +638,7 @@ WantedBy=multi-user.target
 **Save:** `Ctrl+O`, Enter, `Ctrl+X`
 
 **Enable and start:**
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable macedonia-regions
@@ -609,6 +647,7 @@ sudo systemctl status macedonia-regions
 ```
 
 **Test reboot:**
+
 ```bash
 sudo reboot
 # Wait 1-2 minutes
@@ -761,6 +800,7 @@ free -h
 3. See remaining credit and burn rate
 
 **Your $200 Credit:**
+
 - $12/month Droplet = 16+ months
 - $4/month Droplet = 50 months
 - Monitor usage to stay within credit
@@ -768,6 +808,7 @@ free -h
 ### Destroy Droplet When Not Needed
 
 **To save money when testing is done:**
+
 ```bash
 # From DigitalOcean dashboard
 # 1. Click Droplet
@@ -779,6 +820,7 @@ free -h
 ```
 
 **Before destroying, backup:**
+
 - Export your code (should be on GitHub)
 - Backup .env file
 - Document any changes
@@ -800,10 +842,11 @@ Want to try DigitalOcean Kubernetes for comparison?
    - Click **"Create Cluster"**
 
 2. **Connect to cluster:**
+
    ```bash
    # Download kubeconfig from DigitalOcean UI
    # Or install doctl (DigitalOcean CLI)
-   
+
    # On your local machine
    doctl kubernetes cluster kubeconfig save macedonia-k8s
    kubectl get nodes
@@ -903,6 +946,7 @@ sudo apt update && sudo apt upgrade -y
 Track these metrics for your comparison:
 
 ### Performance
+
 ```bash
 # Response time
 time curl http://localhost:3000
@@ -912,12 +956,14 @@ ab -n 1000 -c 10 http://localhost:3000/
 ```
 
 ### Costs
+
 - Droplet: $12/month
 - Bandwidth: Included (2TB)
 - Backups: $1.20/month (if enabled)
 - **Total:** ~$12-13/month
 
 ### Deployment Metrics
+
 - Setup time: ~30-60 minutes
 - Deployment time: ~5 minutes
 - Build time: ~40 seconds
@@ -927,6 +973,7 @@ ab -n 1000 -c 10 http://localhost:3000/
 ## ✅ Summary
 
 **You now have:**
+
 - ✅ DigitalOcean Droplet running Ubuntu
 - ✅ Docker & Docker Compose installed
 - ✅ Your Next.js app deployed
@@ -936,9 +983,11 @@ ab -n 1000 -c 10 http://localhost:3000/
 - ✅ Monitoring enabled
 
 **Your app is live at:**
+
 - `http://YOUR_DROPLET_IP` (or `https://yourdomain.com`)
 
 **Next steps for thesis:**
+
 1. Collect performance metrics
 2. Test under load
 3. Compare with Kubernetes deployment
@@ -947,6 +996,7 @@ ab -n 1000 -c 10 http://localhost:3000/
 ---
 
 **Need help?**
+
 - DigitalOcean Docs: https://docs.digitalocean.com/
 - Community: https://www.digitalocean.com/community
 - Tutorials: https://www.digitalocean.com/community/tutorials
