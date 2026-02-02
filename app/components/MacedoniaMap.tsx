@@ -198,22 +198,27 @@ export default function MacedoniaMap({
       // Match by name (normalized region name from geodata)
       const regionData = regionsByNameRef.current.get(normalized);
 
-      // Get pointer position relative to the chart container
-      const originalEvent = ev.originalEvent as PointerEvent | MouseEvent | undefined;
-      const chartDiv = chartDivRef.current;
-      
+      // Get pointer position relative to viewport for fixed positioning
+      const originalEvent = ev.originalEvent as
+        | PointerEvent
+        | MouseEvent
+        | undefined;
+
       let x = 0;
       let y = 0;
-      
-      if (originalEvent && chartDiv) {
-        const rect = chartDiv.getBoundingClientRect();
-        x = originalEvent.clientX - rect.left;
-        y = originalEvent.clientY - rect.top;
+
+      if (originalEvent) {
+        x = originalEvent.clientX;
+        y = originalEvent.clientY;
       } else {
-        // Fallback to ev.point if original event is not available
+        // Fallback to ev.point + container offset if original event is not available
         const point = ev.point ?? { x: 0, y: 0 };
-        x = point.x;
-        y = point.y;
+        const chartDiv = chartDivRef.current;
+        if (chartDiv) {
+          const rect = chartDiv.getBoundingClientRect();
+          x = rect.left + point.x;
+          y = rect.top + point.y;
+        }
       }
 
       setHoveredRegion({
