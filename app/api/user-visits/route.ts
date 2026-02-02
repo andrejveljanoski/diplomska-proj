@@ -42,7 +42,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+    
     const { visitedRegionCodes } = body as { visitedRegionCodes: string[] };
 
     if (!Array.isArray(visitedRegionCodes)) {
@@ -52,10 +61,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Normalize codes to lowercase
-    const normalizedCodes = visitedRegionCodes.map((code) =>
-      code.toLowerCase().trim()
-    );
+    // Normalize codes to lowercase and deduplicate
+    const normalizedCodes = [...new Set(
+      visitedRegionCodes.map((code) => code.toLowerCase().trim())
+    )];
+
+    // Validate that all region codes exist in the database
+    let validNormalizedCodes: string[] = [];
+    if (normalizedCodes.length > 0) {
+      const validRegions = await db
+        .select({ code: regions.code })
+        .from(regions)
+        .where(inArray(regions.code, normalizedCodes));
+      
+      const validCodes = new Set(validRegions.map((r) => r.code.toLowerCase()));
+      validNormalizedCodes = normalizedCodes.filter((code) => validCodes.has(code));
+    }
 
     // Get current user visits
     const currentVisits = await db
@@ -67,12 +88,12 @@ export async function POST(request: Request) {
       currentVisits.map((v) => v.regionCode.toLowerCase())
     );
 
-    // Find regions to add and remove
-    const codesToAdd = normalizedCodes.filter(
+    // Find regions to add and remove (only use validated codes)
+    const codesToAdd = validNormalizedCodes.filter(
       (code) => !currentVisitedCodes.has(code)
     );
     const codesToRemove = Array.from(currentVisitedCodes).filter(
-      (code) => !normalizedCodes.includes(code)
+      (code) => !validNormalizedCodes.includes(code)
     );
 
     const userId = session.user.id; // Extract for TypeScript
@@ -106,8 +127,11 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error saving user visits:", error);
+    // Return more details in development
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return NextResponse.json(
-      { error: "Failed to save user visits" },
+      { error: "Failed to save user visits", details: errorMessage, stack: errorStack },
       { status: 500 }
     );
   }

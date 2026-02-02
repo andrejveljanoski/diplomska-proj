@@ -39,7 +39,7 @@ export default function RegionDetailPage() {
 
   // Fetch user visits to check if this region is visited
   const { data: visits = [] } = useUserVisits(!!session?.user);
-  const isVisited = visits.some((v) => v.regionCode === regionCode);
+  const isVisited = visits.some((v) => v.regionCode.toLowerCase() === regionCode.toLowerCase());
 
   // Toggle visit mutation with optimistic updates
   const toggleVisitMutation = useToggleRegionVisit();

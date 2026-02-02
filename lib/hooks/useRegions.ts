@@ -134,15 +134,31 @@ export function useToggleRegionVisit() {
       regionCode: string;
       isVisited: boolean;
     }) => {
-      // Get current visits
-      const currentVisits =
-        queryClient.getQueryData<UserVisit[]>(userVisitKeys.lists()) || [];
-      const visitedCodes = currentVisits.map((v) => v.regionCode);
+      // Try to get current visits from cache first
+      let currentVisits = queryClient.getQueryData<UserVisit[]>(userVisitKeys.lists());
+      
+      // If no cached data, try to fetch it (but handle errors gracefully)
+      if (!currentVisits) {
+        try {
+          currentVisits = await queryClient.fetchQuery({
+            queryKey: userVisitKeys.lists(),
+            queryFn: fetchUserVisits,
+          });
+        } catch {
+          // If fetch fails (e.g., not authenticated), start with empty array
+          // This is safe because we're authenticated if we got here
+          currentVisits = [];
+        }
+      }
+      
+      // Normalize region code to lowercase for comparison
+      const normalizedRegionCode = regionCode.toLowerCase();
+      const visitedCodes = (currentVisits || []).map((v) => v.regionCode.toLowerCase());
 
       // Toggle the region
       const updatedCodes = isVisited
-        ? [...visitedCodes, regionCode]
-        : visitedCodes.filter((code) => code !== regionCode);
+        ? [...visitedCodes, normalizedRegionCode]
+        : visitedCodes.filter((code) => code !== normalizedRegionCode);
 
       return saveUserVisits({ visitedRegionCodes: updatedCodes });
     },
@@ -155,6 +171,8 @@ export function useToggleRegionVisit() {
         userVisitKeys.lists()
       );
 
+      const normalizedCode = regionCode.toLowerCase();
+
       // Optimistically update
       queryClient.setQueryData<UserVisit[]>(userVisitKeys.lists(), (old) => {
         if (!old) return old;
@@ -162,13 +180,13 @@ export function useToggleRegionVisit() {
           return [
             ...old,
             {
-              regionCode,
+              regionCode: normalizedCode,
               regionName: "",
               visitedAt: new Date().toISOString(),
             },
           ];
         }
-        return old.filter((v) => v.regionCode !== regionCode);
+        return old.filter((v) => v.regionCode.toLowerCase() !== normalizedCode);
       });
 
       return { previousVisits };
